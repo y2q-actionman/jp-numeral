@@ -1,20 +1,36 @@
+;; -*- coding: utf-8; -*-
+
 (in-package :cl-user)
 
 (ql:quickload :babel)
 
 
-(defpackage kansuji-table
-  (:use :cl :babel))
+(defpackage kansuji-table-generator
+  (:use :cl :babel)
+  (:export #:generate-kansuji-table-file))
 
-(in-package :kansuji-table)
+(in-package :kansuji-table-generator)
 
 
-(defun to-utf8-if-nonnull (str default)
+(defclass octets-printer ()
+  ((octets :initarg :octets :accessor octets-printer-octets)))
+
+(defmethod print-object ((obj octets-printer) stream)
+  (format stream "#.~S"
+	  `(babel:octets-to-string
+	    (make-array ',(array-dimensions (octets-printer-octets obj))
+			:element-type '(unsigned-byte 8)
+			:initial-contents ',(coerce (octets-printer-octets obj) 'list))
+	    :encoding :utf-8)))
+  
+(defun to-octets-printer (str default)
   (if str
-      (babel:string-to-octets str :encoding :utf-8)
+      (make-instance 'octets-printer
+		     :octets (babel:string-to-octets str :encoding :utf-8))
       default))
 
-(defparameter *kansuji-decimal-string-vector*
+
+(defparameter *kansuji-decimal-vector*
   #(("〇" nil "零")
     ("一" "壱" "壹")
     ("二" "弐" "貳")
@@ -26,20 +42,21 @@
     ("八" nil "捌")
     ("九" nil "玖")))
 
-(defun make-kansuji-decimal-octets-vector ()
-  (loop with ret = (make-array (length *kansuji-decimal-string-vector*)
+(defun make-kansuji-decimal-vector-load-form ()
+  (loop with ret = (make-array (length *kansuji-decimal-vector*)
 			       :fill-pointer 0)
-     for (normal financial old) across *kansuji-decimal-string-vector*
-     as normal-octets = (to-utf8-if-nonnull normal nil)
-     as financial-octets = (to-utf8-if-nonnull financial normal-octets)
-     as old-octets = (to-utf8-if-nonnull old financial-octets)
+     for (normal financial old) across *kansuji-decimal-vector*
+     as normal-octets = (to-octets-printer normal nil)
+     as financial-octets = (to-octets-printer financial normal-octets)
+     as old-octets = (to-octets-printer old financial-octets)
      do (vector-push (vector normal-octets financial-octets old-octets nil)
 		     ret)
      finally (return ret)))
 
 
-(defparameter *kansuji-power-string-alist*
-  '((1 . ("十" "拾" nil))
+(defparameter *kansuji-power-alist*
+  '((0 . ("" nil nil))
+    (1 . ("十" "拾" nil))
     (2 . ("百" nil "佰"))
     (3 . ("千" nil "仟"))
     ;; myriads
@@ -48,7 +65,8 @@
     (12 . "兆")
     (16 . "京")
     (20 . "垓")
-    (24 . (#(237 161 149 237 189 177) nil "秭" "秭")) ; U+25771 may be out of Lisp string..
+    (24 . (#(240 165 157 177) nil "秭" "秭")) ; U+25771 may be out of Lisp string..
+    ;; BUG: babel on ACL makes #(237 161 149 237 189 177) from U+25771 !!
     (28 . "穣")
     (32 . "溝")
     (36 . "澗")
@@ -83,41 +101,57 @@
     (-20 . "虚空")
     (-21 . "清浄")))
 
-(defun make-kansuji-power-octets-alist ()
-  (loop with ret = (make-array (length *kansuji-power-string-alist*) :fill-pointer 0)
-     for (i . data) in *kansuji-power-string-alist*
+(defun make-kansuji-power-alist-load-form ()
+  (loop with ret = nil
+     for (i . data) in *kansuji-power-alist*
      do (etypecase data
 	  (string
-	   (let ((octets (babel:string-to-octets data :encoding :utf-8)))
-	     (vector-push (cons i (vector octets octets octets nil))
-			  ret)))
+	   (let ((octets (to-octets-printer data nil)))
+	     (push (cons i (vector octets octets octets nil))
+		   ret)))
 	  (list
 	   (destructuring-bind (normal financial old &optional unicode-bmp-alternative) data
 	     (let* ((normal-octets (etypecase normal
 				     (string
-				      (to-utf8-if-nonnull normal nil))
+				      (to-octets-printer normal nil))
 				     (vector
-				      normal)))
-		    (financial-octets (to-utf8-if-nonnull financial normal-octets))
-		    (old-octets (to-utf8-if-nonnull old financial-octets))
-		    (alt-octets (to-utf8-if-nonnull unicode-bmp-alternative nil)))
-	       (vector-push (cons i (vector normal-octets financial-octets old-octets
-					    alt-octets))
-			    ret)))))
-     finally (return ret)))
+				      (make-instance 'octets-printer
+						     :octets normal))))
+		    (financial-octets (to-octets-printer financial normal-octets))
+		    (old-octets (to-octets-printer old financial-octets))
+		    (alt-octets (to-octets-printer unicode-bmp-alternative nil)))
+	       (push (cons i (vector normal-octets financial-octets old-octets
+				     alt-octets))
+		     ret)))))
+     finally (return (nreverse ret))))
 
 
-(defun generate-kansuji-table (output-file &optional (package *package*))
+(defun generate-kansuji-table-file (output-file &optional (*package* *package*))
   (with-open-file (stream output-file
 			  :direction :output :if-exists :error
 			  :if-does-not-exist :create)
-    (let ((*print-circle* t))
-      (format stream "~&~S~2%"
-	      `(defparameter ,(intern (symbol-name '*kansuji-decimal-octets-vector*) package)
-		 ,(make-kansuji-decimal-octets-vector)
-		 "A vector of (<normal-octets> <financial-octets> <old-octets> <alternative-in-BMP-of-Unicode>)"
-		 ))
-      (format stream "~&~S~2%"
-	      `(defparameter ,(intern (symbol-name '*kansuji-power-octets-alist*) package)
-		 ,(make-kansuji-power-octets-alist)
-		 "An alist of (<power> . (<normal-octets> <financial-octets> <old-octets> <alternative-in-BMP-of-Unicode>))")))))
+    (flet ((gen-output-symbol (sym)
+	     (intern (symbol-name sym) *package*)))
+      (let ((*print-circle* t))
+	(format stream "~S~%"
+		`(in-package ,(package-name *package*)))
+	(terpri stream)
+	(format stream "~S~%"
+		`(defconstant ,(gen-output-symbol '+kansuji-table-normal-index+) 0))
+	(format stream "~S~%"
+		`(defconstant ,(gen-output-symbol '+kansuji-table-financial-index+) 1))
+	(format stream "~S~%"
+		`(defconstant ,(gen-output-symbol '+kansuji-table-old-index+) 2))
+	(format stream "~S~%"
+		`(defconstant ,(gen-output-symbol '+kansuji-table-alternative-in-bmp-index+) 2))
+	(terpri stream)
+	(format stream "~S~%"
+		`(defparameter ,(gen-output-symbol '*kansuji-decimal-vector*)
+		   ,(make-kansuji-decimal-vector-load-form)
+		   "A vector of (<normal-octets> <financial-octets> <old-octets> <alternative-in-BMP-of-Unicode>)"
+		   ))
+	(terpri stream)
+	(format stream "~S~%"
+		`(defparameter ,(gen-output-symbol '*kansuji-power-alist*)
+		   ',(make-kansuji-power-alist-load-form)
+		   "An alist of (<power> . (<normal-octets> <financial-octets> <old-octets> <alternative-in-BMP-of-Unicode>))"))))))
