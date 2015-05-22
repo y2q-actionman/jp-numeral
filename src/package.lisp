@@ -1,5 +1,5 @@
 (in-package :cl-user)
 
-(defpackage cl-jp-numeral
+(defpackage jp-numeral
   (:use :cl)
   (:export :pprint-jp-numeral))

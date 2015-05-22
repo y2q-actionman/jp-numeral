@@ -1,4 +1,4 @@
 (in-package :cl-user)
 
-(defpackage cl-jp-numeral.test
+(defpackage jp-numeral.test
   (:use :cl))

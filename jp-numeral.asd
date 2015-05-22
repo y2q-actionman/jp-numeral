@@ -5,7 +5,7 @@
 
 (in-package :cl-user)
 
-(asdf:defsystem :cl-jp-numeral
+(asdf:defsystem :jp-numeral
   :description "A printer for Japanese numerals."
   :license "MIT"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
@@ -17,4 +17,4 @@
     ((:file "package")
      (:file "jp-numeral-table")
      (:file "jp-numeral"))))
-  :in-order-to ((asdf:test-op (asdf:test-op #:cl-jp-numeral.test)))) 
+  :in-order-to ((asdf:test-op (asdf:test-op #:jp-numeral.test)))) 

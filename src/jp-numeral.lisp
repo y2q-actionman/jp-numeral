@@ -1,4 +1,4 @@
-(in-package :cl-jp-numeral)
+(in-package :jp-numeral)
 
 (defvar *force-unicode-bmp* nil)
 

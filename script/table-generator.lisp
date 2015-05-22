@@ -3,19 +3,19 @@
 ;;; Usage:
 ;;; 
 ;;; To build 'jp-numeral-table.lisp', do below after loading
-;;; DEFPACKAGE of 'cl-jp-numeral'.
+;;; DEFPACKAGE of 'jp-numeral'.
 ;;; 
 ;;; (load "table-generator.asd")
-;;; (asdf:load-system :cl-jp-numeral.table-generator)
-;;; (cl-jp-numeral.table-generator:generate-file "/tmp/jp-numeral-table.lisp" (find-package "CL-JP-NUMERAL"))
+;;; (asdf:load-system :jp-numeral.table-generator)
+;;; (jp-numeral.table-generator:generate-file "/tmp/jp-numeral-table.lisp" (find-package "JP-NUMERAL"))
 
 (in-package :cl-user)
 
-(defpackage cl-jp-numeral.table-generator
+(defpackage jp-numeral.table-generator
   (:use :cl)
   (:export #:generate-file))
 
-(in-package :cl-jp-numeral.table-generator)
+(in-package :jp-numeral.table-generator)
 
 
 (defclass octets-printer ()

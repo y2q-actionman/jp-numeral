@@ -5,8 +5,8 @@
 
 (in-package :cl-user)
 
-(asdf:defsystem :cl-jp-numeral.table-generator
-  :description "A script for making cl-jp-numeral."
+(asdf:defsystem :jp-numeral.table-generator
+  :description "A script for making jp-numeral."
   :license "MIT"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:babel)
