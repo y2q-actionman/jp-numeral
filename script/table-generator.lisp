@@ -1,15 +1,21 @@
-;; -*- coding: utf-8; -*-
+;;; -*- coding: utf-8; -*-
+
+;;; Usage:
+;;; 
+;;; To build 'jp-numeral-table.lisp', do below after loading
+;;; DEFPACKAGE of 'cl-jp-numeral'.
+;;; 
+;;; (load "table-generator.asd")
+;;; (asdf:load-system :cl-jp-numeral.table-generator)
+;;; (cl-jp-numeral.table-generator:generate-file "/tmp/jp-numeral-table.lisp" (find-package "CL-JP-NUMERAL"))
 
 (in-package :cl-user)
 
-(ql:quickload :babel)
+(defpackage cl-jp-numeral.table-generator
+  (:use :cl)
+  (:export #:generate-file))
 
-
-(defpackage kansuji-table-generator
-  (:use :cl :babel)
-  (:export #:generate-kansuji-table-file))
-
-(in-package :kansuji-table-generator)
+(in-package :cl-jp-numeral.table-generator)
 
 
 (defclass octets-printer ()
@@ -30,31 +36,30 @@
       default))
 
 
-(defparameter *kansuji-decimal-vector*
-  #(("〇" nil "零")
-    ("一" "壱" "壹")
-    ("二" "弐" "貳")
-    ("三" "参" "參")
-    ("四" nil "肆")
-    ("五" nil "伍")
-    ("六" nil "陸")
-    ("七" nil "柒")
-    ("八" nil "捌")
-    ("九" nil "玖")))
+(defconstant +jp-numeral-decimal-alist+
+  '((0 . ("〇" nil "零"))
+    (1 . ("一" "壱" "壹"))
+    (2 . ("二" "弐" "貳"))
+    (3 . ("三" "参" "參"))
+    (4 . ("四" nil "肆"))
+    (5 . ("五" nil "伍"))
+    (6 . ("六" nil "陸"))
+    (7 . ("七" nil "柒"))
+    (8 . ("八" nil "捌"))
+    (9 . ("九" nil "玖"))))
 
-(defun make-kansuji-decimal-vector-load-form ()
-  (loop with ret = (make-array (length *kansuji-decimal-vector*)
-			       :fill-pointer 0)
-     for (normal financial old) across *kansuji-decimal-vector*
+(defun make-jp-numeral-decimal-alist-load-form ()
+  (loop with ret = nil
+     for (num . (normal financial old)) in +jp-numeral-decimal-alist+
      as normal-octets = (to-octets-printer normal nil)
      as financial-octets = (to-octets-printer financial normal-octets)
      as old-octets = (to-octets-printer old financial-octets)
-     do (vector-push (vector normal-octets financial-octets old-octets nil)
-		     ret)
-     finally (return ret)))
+     do (push (cons num (vector normal-octets financial-octets old-octets nil))
+	      ret)
+     finally (return (nreverse ret))))
 
 
-(defparameter *kansuji-power-alist*
+(defconstant +jp-numeral-power-alist+
   '((0 . ("" nil nil))
     (1 . ("十" "拾" nil))
     (2 . ("百" nil "佰"))
@@ -101,9 +106,9 @@
     (-20 . "虚空")
     (-21 . "清浄")))
 
-(defun make-kansuji-power-alist-load-form ()
+(defun make-jp-numeral-power-alist-load-form ()
   (loop with ret = nil
-     for (i . data) in *kansuji-power-alist*
+     for (i . data) in +jp-numeral-power-alist+
      do (etypecase data
 	  (string
 	   (let ((octets (to-octets-printer data nil)))
@@ -126,9 +131,9 @@
      finally (return (nreverse ret))))
 
 
-(defun generate-kansuji-table-file (output-file &optional (*package* *package*))
+(defun generate-file (output-file &optional (*package* *package*))
   (with-open-file (stream output-file
-			  :direction :output :if-exists :error
+			  :direction :output :if-exists :rename
 			  :if-does-not-exist :create)
     (flet ((gen-output-symbol (sym)
 	     (intern (symbol-name sym) *package*)))
@@ -137,21 +142,20 @@
 		`(in-package ,(package-name *package*)))
 	(terpri stream)
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+kansuji-table-normal-index+) 0))
+		`(defconstant ,(gen-output-symbol '+jp-numeral-table-normal-index+) 0))
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+kansuji-table-financial-index+) 1))
+		`(defconstant ,(gen-output-symbol '+jp-numeral-table-financial-index+) 1))
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+kansuji-table-old-index+) 2))
+		`(defconstant ,(gen-output-symbol '+jp-numeral-table-old-index+) 2))
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+kansuji-table-alternative-in-bmp-index+) 2))
+		`(defconstant ,(gen-output-symbol '+jp-numeral-table-alternative-in-bmp-index+) 3))
 	(terpri stream)
 	(format stream "~S~%"
-		`(defparameter ,(gen-output-symbol '*kansuji-decimal-vector*)
-		   ,(make-kansuji-decimal-vector-load-form)
-		   "A vector of (<normal-octets> <financial-octets> <old-octets> <alternative-in-BMP-of-Unicode>)"
-		   ))
+		`(defconstant ,(gen-output-symbol '+jp-numeral-decimal-alist+)
+		   ',(make-jp-numeral-decimal-alist-load-form)
+		   "A vector of (<normal-octets> <financial-octets> <old-octets> <alternative-in-BMP-of-Unicode>)"))
 	(terpri stream)
 	(format stream "~S~%"
-		`(defparameter ,(gen-output-symbol '*kansuji-power-alist*)
-		   ',(make-kansuji-power-alist-load-form)
+		`(defconstant ,(gen-output-symbol '+jp-numeral-power-alist+)
+		   ',(make-jp-numeral-power-alist-load-form)
 		   "An alist of (<power> . (<normal-octets> <financial-octets> <old-octets> <alternative-in-BMP-of-Unicode>))"))))))
