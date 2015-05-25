@@ -122,14 +122,20 @@
        (let ((jp-numeral-strs (make-jp-numeral-integer-string object style)))
 	 (write-string-list jp-numeral-strs)))
       (ratio
-       (let ((numerator-strs (make-jp-numeral-integer-string (numerator object) style))
+       (let ((numerator-strs (make-jp-numeral-integer-string (abs (numerator object)) style))
+	     (numerator-sign-str (if (minusp (numerator object))
+				     (get-jp-numeral-sign style) ""))
 	     (denominator-strs (make-jp-numeral-integer-string (denominator object) style))
 	     (parts-of-str (get-jp-numeral-parts-of style)))
+	 ;; (assert (plusp (denominator object))) ; Hyperspec 12.1.3.2
 	 (cond ((eq style :positional)
+		(write-string numerator-sign-str stream)
 		(write-string-list numerator-strs)
 		(write-string parts-of-str stream)
 		(write-string-list denominator-strs))
 	       (t
+		;; sign is printed as a mixed-fraction style.
+		(write-string numerator-sign-str stream)
 		(write-string-list denominator-strs)
 		(write-string parts-of-str stream)
 		(write-string-list numerator-strs))))))))
