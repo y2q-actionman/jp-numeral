@@ -149,7 +149,7 @@
                   :INITIAL-CONTENTS '(231 142 150))
                . #3#)
            NIL))))
-  "A vector of (<normal-octets> <financial-octets> <old-octets> <alternative-in-BMP-of-Unicode>)")
+  "A vector of (<normal> <financial> <old> <alternative-in-BMP-of-Unicode>)")
 
 (DEFCONSTANT +JP-NUMERAL-POWER-ALIST+
     (QUOTE
@@ -544,4 +544,43 @@
                       :INITIAL-CONTENTS '(230 184 133 230 181 132))
                    . #3#)
            #44# #44# NIL))))
-  "An alist of (<power> . (<normal-octets> <financial-octets> <old-octets> <alternative-in-BMP-of-Unicode>))")
+  "An alist of (<power> . (<normal> <financial> <old> <alternative-in-BMP-of-Unicode>))")
+
+(DEFCONSTANT +JP-NUMERAL-SIGN-LIST-POSITIONAL-INDEX+ 3)
+
+(DEFCONSTANT +JP-NUMERAL-SIGN-LIST+
+    (QUOTE
+     (#.(BABEL:OCTETS-TO-STRING
+           (MAKE-ARRAY '(12)
+             :ELEMENT-TYPE #1='(UNSIGNED-BYTE 8)
+             :INITIAL-CONTENTS '(227
+                                 131
+                                 158
+                                 227
+                                 130
+                                 164
+                                 227
+                                 131
+                                 138
+                                 227
+                                 130
+                                 185))
+          . #2=(:ENCODING :UTF-8))
+      #.(BABEL:OCTETS-TO-STRING
+           (MAKE-ARRAY '(6)
+             :ELEMENT-TYPE #1#
+             :INITIAL-CONTENTS '(232 178 160 227 129 174))
+          . #2#)
+      #.(BABEL:OCTETS-TO-STRING
+           (MAKE-ARRAY '(6)
+             :ELEMENT-TYPE #1#
+             :INITIAL-CONTENTS '(232 178 160 228 185 139))
+          . #2#)
+      #.(BABEL:OCTETS-TO-STRING
+           (MAKE-ARRAY '(3)
+             :ELEMENT-TYPE #1#
+             :INITIAL-CONTENTS '(226 136 146))
+          . #2#)))
+  "A list of (<normal> <financial> <old> <positional>")
+
+(DEFCONSTANT +JP-NUMERAL-POWER-MAX+ 68)

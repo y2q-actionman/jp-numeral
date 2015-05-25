@@ -12,3 +12,12 @@
   :depends-on (:babel)
   :components
   ((:file "table-generator")))
+
+;;; Usage:
+;;; 
+;;; To make 'jp-numeral-table.lisp', do below after loading
+;;; the DEFPACKAGE of 'jp-numeral'.
+;;; 
+;;; (load "table-generator.asd")
+;;; (asdf:load-system :jp-numeral.table-generator)
+;;; (jp-numeral.table-generator:generate-file "/tmp/jp-numeral-table.lisp" (find-package "JP-NUMERAL"))

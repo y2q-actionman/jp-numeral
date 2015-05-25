@@ -64,3 +64,8 @@ CL-USER> (format nil "~:@/jp-numeral:pprint-jp-numeral/" 12345687890)
 (stub)
 
 
+# TODO
+
+- 桁の上限や下限を越えた時の処置
+- 分数
+- 浮動小数点数

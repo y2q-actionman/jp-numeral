@@ -22,14 +22,14 @@
 (defun get-jp-numeral-power (n usage-sym)
   (alexandria:if-let ((a-entry (assoc n +jp-numeral-power-alist+)))
     (get-jp-numeral-from-entry (cdr a-entry) usage-sym)))
-     
+  
 (defun get-jp-numeral-sign (usage-sym)
-  ;; TODO: use babel.
-  (ecase usage-sym
-    (:normal "マイナス")
-    (:financial "負の")
-    (:old "負之")
-    (:positional "−")))
+  (nth (ecase usage-sym
+	 (:normal +JP-NUMERAL-TABLE-NORMAL-INDEX+)
+	 (:financial +JP-NUMERAL-TABLE-FINANCIAL-INDEX+)
+	 (:old +JP-NUMERAL-TABLE-OLD-INDEX+)
+	 (:positional +JP-NUMERAL-SIGN-LIST-POSITIONAL-INDEX+))
+       +jp-numeral-sign-list+))
   
      
 
@@ -62,29 +62,42 @@
 	      (put-jp-numeral (get-jp-numeral-decimal d0 style)))))))
     buf))
 
+(define-condition jp-numeral-overflow-error (error)
+  ())
+
 (defun make-jp-numeral-integer-string (object style)
   (declare (type integer object))
-  (let ((strs nil))
-    (loop for power from 0 by 4
-       for (rest digits4) = (multiple-value-list (floor object 10000))
-       then (multiple-value-list (floor rest 10000))
-       as digits4-str = (make-jp-numeral-digits4-string digits4 style)
-       ;; TODO: check 10^68 -- power-str may be null
-       as power-str = (get-jp-numeral-power power style)
-       when (plusp (length digits4-str))
-       do (push power-str strs)
-	 (push digits4-str strs)
-       while (> rest 0))
-    strs))
+  (cond
+    ((zerop object)
+     (list (get-jp-numeral-decimal 0 style)))
+    ((>= object (expt 10 (+ +jp-numeral-power-max+ 4)))
+     (error 'jp-numeral-overflow-error))
+    (t
+     (let ((strs nil))
+       (loop for power from 0 by 4
+	  for (rest digits4) = (multiple-value-list (floor (abs object) 10000))
+	  then (multiple-value-list (floor rest 10000))
+	  as digits4-str = (make-jp-numeral-digits4-string digits4 style)
+	  as power-str = (get-jp-numeral-power power style)
+	  when (plusp (length digits4-str))
+	  do (push power-str strs)
+	    (push digits4-str strs)
+	  while (> rest 0))
+       (when (minusp object)
+	 (push (get-jp-numeral-sign style) strs))
+       strs))))
 
 (defun make-positional-jp-numeral-integer-string (object)
+  (declare (type integer object))
   (let ((strs nil))
     (loop for power from 0
-       for (rest digit) = (multiple-value-list (floor object 10))
+       for (rest digit) = (multiple-value-list (floor (abs object) 10))
        then (multiple-value-list (floor rest 10))
        as jp-numeral = (get-jp-numeral-decimal digit :positional)
        do (push jp-numeral strs)
        while (> rest 0))
+    (when (minusp object)
+      (push (get-jp-numeral-sign :positional) strs))
     strs))
 
 (defun %pprint-jp-numeral (stream object &optional (style :normal))
@@ -92,18 +105,11 @@
     (error "~A is not an expected type for jp-numeral" (type-of object)))
   (ctypecase object
     (integer
-     (let ((jp-numeral-strs nil))
-       (when (minusp object)
-	 (push (get-jp-numeral-sign style) jp-numeral-strs)
-	 (setf object (- object)))
-       (alexandria:appendf
-	jp-numeral-strs
-	(if (eq style :positional)
-	    (make-positional-jp-numeral-integer-string object)
-	    (make-jp-numeral-integer-string object style)))
-       (when (and (zerop object)
-		  (null jp-numeral-strs))
-	 (push (get-jp-numeral-decimal 0 style) jp-numeral-strs))
+     (let ((jp-numeral-strs
+	    (if (eq style :positional)
+		(make-positional-jp-numeral-integer-string object)
+		(make-jp-numeral-integer-string object style))))
+       ;; TODO: catch jp-numeral-overflow-error, and use alternative string.
        (loop for s in jp-numeral-strs
 	  do (write-string s stream))))))
 

@@ -1,14 +1,5 @@
 ;;; -*- coding: utf-8; -*-
 
-;;; Usage:
-;;; 
-;;; To build 'jp-numeral-table.lisp', do below after loading
-;;; DEFPACKAGE of 'jp-numeral'.
-;;; 
-;;; (load "table-generator.asd")
-;;; (asdf:load-system :jp-numeral.table-generator)
-;;; (jp-numeral.table-generator:generate-file "/tmp/jp-numeral-table.lisp" (find-package "JP-NUMERAL"))
-
 (in-package :cl-user)
 
 (defpackage jp-numeral.table-generator
@@ -131,6 +122,18 @@
      finally (return (nreverse ret))))
 
 
+(defconstant +jp-numeral-sign-list+
+  '("マイナス" "負の" "負之" "−"))
+
+(defun make-jp-numeral-sign-list-load-form ()
+  (loop for str in +jp-numeral-sign-list+
+     collect (to-octets-printer str nil)))
+
+
+(defconstant +jp-numeral-power-max+
+  (apply #'max (mapcar #'car +jp-numeral-power-alist+)))
+
+
 (defun generate-file (output-file &optional (*package* *package*))
   (with-open-file (stream output-file
 			  :direction :output :if-exists :rename
@@ -153,9 +156,22 @@
 	(format stream "~S~%"
 		`(defconstant ,(gen-output-symbol '+jp-numeral-decimal-alist+)
 		   ',(make-jp-numeral-decimal-alist-load-form)
-		   "A vector of (<normal-octets> <financial-octets> <old-octets> <alternative-in-BMP-of-Unicode>)"))
+		   "A vector of (<normal> <financial> <old> <alternative-in-BMP-of-Unicode>)"))
 	(terpri stream)
 	(format stream "~S~%"
 		`(defconstant ,(gen-output-symbol '+jp-numeral-power-alist+)
 		   ',(make-jp-numeral-power-alist-load-form)
-		   "An alist of (<power> . (<normal-octets> <financial-octets> <old-octets> <alternative-in-BMP-of-Unicode>))"))))))
+		   "An alist of (<power> . (<normal> <financial> <old> <alternative-in-BMP-of-Unicode>))"))
+	(terpri stream)
+	(format stream "~S~%"
+		`(defconstant ,(gen-output-symbol '+jp-numeral-sign-list-positional-index+) 3))
+	(terpri stream)
+	(format stream "~S~%"
+		`(defconstant ,(gen-output-symbol '+jp-numeral-sign-list+)
+		   ',(make-jp-numeral-sign-list-load-form)
+		   "A list of (<normal> <financial> <old> <positional>"))
+	(terpri stream)
+	(format stream "~S~%"
+		`(defconstant ,(gen-output-symbol '+jp-numeral-power-max+)
+		   ,+jp-numeral-power-max+))
+	))))
