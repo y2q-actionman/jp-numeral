@@ -546,6 +546,8 @@
            #44# #44# NIL))))
   "An alist of (<power> . (<normal> <financial> <old> <alternative-in-BMP-of-Unicode>))")
 
+(DEFCONSTANT +JP-NUMERAL-POWER-MAX+ 68)
+
 (DEFCONSTANT +JP-NUMERAL-SIGN-LIST-POSITIONAL-INDEX+ 3)
 
 (DEFCONSTANT +JP-NUMERAL-SIGN-LIST+
@@ -583,4 +585,22 @@
           . #2#)))
   "A list of (<normal> <financial> <old> <positional>")
 
-(DEFCONSTANT +JP-NUMERAL-POWER-MAX+ 68)
+(DEFCONSTANT +JP-NUMERAL-FRACTION-PARTS-OF-LIST+
+    (QUOTE
+     (#1=#.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(6)
+                :ELEMENT-TYPE #2='(UNSIGNED-BYTE 8)
+                :INITIAL-CONTENTS '(229 136 134 227 129 174))
+             . #3=(:ENCODING :UTF-8))
+      #1#
+      #.(BABEL:OCTETS-TO-STRING
+           (MAKE-ARRAY '(6)
+             :ELEMENT-TYPE #2#
+             :INITIAL-CONTENTS '(229 136 134 228 185 139))
+          . #3#)
+      #.(BABEL:OCTETS-TO-STRING
+           (MAKE-ARRAY '(3)
+             :ELEMENT-TYPE #2#
+             :INITIAL-CONTENTS '(239 188 143))
+          . #3#)))
+  "A list of (<normal> <financial> <old> <positional>")

@@ -31,6 +31,14 @@
 	 (:positional +JP-NUMERAL-SIGN-LIST-POSITIONAL-INDEX+))
        +jp-numeral-sign-list+))
   
+(defun get-jp-numeral-parts-of (usage-sym)
+  (nth (ecase usage-sym
+	 (:normal +JP-NUMERAL-TABLE-NORMAL-INDEX+)
+	 (:financial +JP-NUMERAL-TABLE-FINANCIAL-INDEX+)
+	 (:old +JP-NUMERAL-TABLE-OLD-INDEX+)
+	 (:positional +JP-NUMERAL-SIGN-LIST-POSITIONAL-INDEX+))
+       +JP-NUMERAL-FRACTION-PARTS-OF-LIST+))
+  
      
 
 (defun make-jp-numeral-digits4-string (digits4 style)
@@ -65,8 +73,24 @@
 (define-condition jp-numeral-overflow-error (error)
   ())
 
+(defun make-positional-jp-numeral-integer-string (object)
+  (declare (type integer object))
+  (let ((strs nil))
+    (loop for power from 0
+       for (rest digit) = (multiple-value-list (floor (abs object) 10))
+       then (multiple-value-list (floor rest 10))
+       as jp-numeral = (get-jp-numeral-decimal digit :positional)
+       do (push jp-numeral strs)
+       while (> rest 0))
+    (when (minusp object)
+      (push (get-jp-numeral-sign :positional) strs))
+    strs))
+
 (defun make-jp-numeral-integer-string (object style)
   (declare (type integer object))
+  (when (eq style :positional)
+    (return-from make-jp-numeral-integer-string
+      (make-positional-jp-numeral-integer-string object)))
   (cond
     ((zerop object)
      (list (get-jp-numeral-decimal 0 style)))
@@ -87,32 +111,28 @@
 	 (push (get-jp-numeral-sign style) strs))
        strs))))
 
-(defun make-positional-jp-numeral-integer-string (object)
-  (declare (type integer object))
-  (let ((strs nil))
-    (loop for power from 0
-       for (rest digit) = (multiple-value-list (floor (abs object) 10))
-       then (multiple-value-list (floor rest 10))
-       as jp-numeral = (get-jp-numeral-decimal digit :positional)
-       do (push jp-numeral strs)
-       while (> rest 0))
-    (when (minusp object)
-      (push (get-jp-numeral-sign :positional) strs))
-    strs))
-
 (defun %pprint-jp-numeral (stream object &optional (style :normal))
   (unless (numberp object)
     (error "~A is not an expected type for jp-numeral" (type-of object)))
-  (ctypecase object
-    (integer
-     (let ((jp-numeral-strs
-	    (if (eq style :positional)
-		(make-positional-jp-numeral-integer-string object)
-		(make-jp-numeral-integer-string object style))))
+  (flet ((write-string-list (str-list)
+	   (mapc #'(lambda (s) (write-string s stream)) str-list)))
+    (ctypecase object
+      (integer
        ;; TODO: catch jp-numeral-overflow-error, and use alternative string.
-       (loop for s in jp-numeral-strs
-	  do (write-string s stream))))))
-
+       (let ((jp-numeral-strs (make-jp-numeral-integer-string object style)))
+	 (write-string-list jp-numeral-strs)))
+      (ratio
+       (let ((numerator-strs (make-jp-numeral-integer-string (numerator object) style))
+	     (denominator-strs (make-jp-numeral-integer-string (denominator object) style))
+	     (parts-of-str (get-jp-numeral-parts-of style)))
+	 (cond ((eq style :positional)
+		(write-string-list numerator-strs)
+		(write-string parts-of-str stream)
+		(write-string-list denominator-strs))
+	       (t
+		(write-string-list denominator-strs)
+		(write-string parts-of-str stream)
+		(write-string-list numerator-strs))))))))
 
 ;; cl:format interface
 (defun pprint-jp-numeral (stream object &optional colon-p at-sign-p)

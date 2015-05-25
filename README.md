@@ -66,6 +66,10 @@ CL-USER> (format nil "~:@/jp-numeral:pprint-jp-numeral/" 12345687890)
 
 # TODO
 
+- ~~0 の扱い~~
+- ~~負の数~~
 - 桁の上限や下限を越えた時の処置
-- 分数
+- ~~分数~~
 - 浮動小数点数
+- 名前 (financial -> formal, remove jp-numeral)
+

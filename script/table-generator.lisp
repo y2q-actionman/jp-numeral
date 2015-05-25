@@ -122,6 +122,10 @@
      finally (return (nreverse ret))))
 
 
+(defconstant +jp-numeral-power-max+
+  (apply #'max (mapcar #'car +jp-numeral-power-alist+)))
+
+
 (defconstant +jp-numeral-sign-list+
   '("マイナス" "負の" "負之" "−"))
 
@@ -130,8 +134,14 @@
      collect (to-octets-printer str nil)))
 
 
-(defconstant +jp-numeral-power-max+
-  (apply #'max (mapcar #'car +jp-numeral-power-alist+)))
+(defconstant +jp-numeral-fraction-parts-of-list+
+  '("分の" nil "分之" "／"))
+
+(defun make-jp-numeral-fraction-parts-of-list-load-form ()
+  (loop as prev-octets = nil then (or str-octets prev-octets)
+     for str in +jp-numeral-fraction-parts-of-list+
+     as str-octets = (to-octets-printer str prev-octets)
+     collect str-octets))
 
 
 (defun generate-file (output-file &optional (*package* *package*))
@@ -164,6 +174,10 @@
 		   "An alist of (<power> . (<normal> <financial> <old> <alternative-in-BMP-of-Unicode>))"))
 	(terpri stream)
 	(format stream "~S~%"
+		`(defconstant ,(gen-output-symbol '+jp-numeral-power-max+)
+		   ,+jp-numeral-power-max+))
+	(terpri stream)
+	(format stream "~S~%"
 		`(defconstant ,(gen-output-symbol '+jp-numeral-sign-list-positional-index+) 3))
 	(terpri stream)
 	(format stream "~S~%"
@@ -172,6 +186,7 @@
 		   "A list of (<normal> <financial> <old> <positional>"))
 	(terpri stream)
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+jp-numeral-power-max+)
-		   ,+jp-numeral-power-max+))
+		`(defconstant ,(gen-output-symbol '+jp-numeral-fraction-parts-of-list+)
+		   ',(make-jp-numeral-fraction-parts-of-list-load-form)
+		   "A list of (<normal> <financial> <old> <positional>"))
 	))))
