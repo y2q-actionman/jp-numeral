@@ -23,6 +23,15 @@
   (alexandria:if-let ((a-entry (assoc n +jp-numeral-power-alist+)))
     (get-jp-numeral-from-entry (cdr a-entry) usage-sym)))
      
+(defun get-jp-numeral-sign (usage-sym)
+  ;; TODO: use babel.
+  (ecase usage-sym
+    (:normal "マイナス")
+    (:financial "負の")
+    (:old "負之")
+    (:positional "−")))
+  
+     
 
 (defun make-jp-numeral-digits4-string (digits4 style)
   (assert (<= 0 digits4 9999))
@@ -78,13 +87,23 @@
        while (> rest 0))
     strs))
 
-(defun write-jp-numeral (stream object &optional (style :normal))
+(defun %pprint-jp-numeral (stream object &optional (style :normal))
+  (unless (numberp object)
+    (error "~A is not an expected type for jp-numeral" (type-of object)))
   (ctypecase object
     (integer
-     (let ((jp-numeral-strs 
-	    (if (eq style :positional)
-		(make-positional-jp-numeral-integer-string object)
-		(make-jp-numeral-integer-string object style))))
+     (let ((jp-numeral-strs nil))
+       (when (minusp object)
+	 (push (get-jp-numeral-sign style) jp-numeral-strs)
+	 (setf object (- object)))
+       (alexandria:appendf
+	jp-numeral-strs
+	(if (eq style :positional)
+	    (make-positional-jp-numeral-integer-string object)
+	    (make-jp-numeral-integer-string object style)))
+       (when (and (zerop object)
+		  (null jp-numeral-strs))
+	 (push (get-jp-numeral-decimal 0 style) jp-numeral-strs))
        (loop for s in jp-numeral-strs
 	  do (write-string s stream))))))
 
@@ -95,4 +114,4 @@
 		     (colon-p :financial)
 		     (at-sign-p :old)
 		     (t :normal))))
-    (write-jp-numeral stream object style)))
+    (%pprint-jp-numeral stream object style)))
