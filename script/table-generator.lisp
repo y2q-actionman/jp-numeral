@@ -16,8 +16,8 @@
   (format stream "#.~S"
 	  `(babel:octets-to-string
 	    (make-array ',(array-dimensions (octets-printer-octets obj))
-			:element-type '(unsigned-byte 8)
-			:initial-contents ',(coerce (octets-printer-octets obj) 'list))
+			:initial-contents ',(coerce (octets-printer-octets obj) 'list)
+			:element-type '(unsigned-byte 8))
 	    :encoding :utf-8)))
   
 (defun to-octets-printer (str default)
