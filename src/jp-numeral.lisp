@@ -1,17 +1,11 @@
 (in-package :jp-numeral)
 
-(defvar *force-unicode-bmp* nil)
-
 (defun get-jp-numeral-from-entry (entry usage-sym)
-  (alexandria:if-let 
-      ((alternative (and *force-unicode-bmp*
-			 (aref entry +JP-NUMERAL-TABLE-ALTERNATIVE-IN-BMP-INDEX+))))
-    alternative
-    (aref entry 
-	  (ecase usage-sym
-	    ((:normal :positional) +JP-NUMERAL-TABLE-NORMAL-INDEX+)
-	    (:financial +JP-NUMERAL-TABLE-FINANCIAL-INDEX+)
-	    (:old +JP-NUMERAL-TABLE-OLD-INDEX+)))))
+  (aref entry 
+	(ecase usage-sym
+	  ((:normal :positional) +JP-NUMERAL-TABLE-NORMAL-INDEX+)
+	  (:financial +JP-NUMERAL-TABLE-FINANCIAL-INDEX+)
+	  (:old +JP-NUMERAL-TABLE-OLD-INDEX+))))
 
 (defun get-jp-numeral-decimal (n usage-sym)
   (assert (<= 0 n 9))
@@ -22,23 +16,23 @@
 (defun get-jp-numeral-power (n usage-sym)
   (alexandria:if-let ((a-entry (assoc n +jp-numeral-power-alist+)))
     (get-jp-numeral-from-entry (cdr a-entry) usage-sym)))
+
+;; TODO: remove
+(defun get-jp-numeral-from-list (usage-sym list)
+  (nth (ecase usage-sym
+	 (:normal +JP-NUMERAL-TABLE-NORMAL-INDEX+)
+	 (:financial +JP-NUMERAL-TABLE-FINANCIAL-INDEX+)
+	 (:old +JP-NUMERAL-TABLE-OLD-INDEX+)
+	 (:positional +JP-NUMERAL-TABLE-POSITIONAL-INDEX+))
+       list))
   
 (defun get-jp-numeral-sign (usage-sym)
-  (nth (ecase usage-sym
-	 (:normal +JP-NUMERAL-TABLE-NORMAL-INDEX+)
-	 (:financial +JP-NUMERAL-TABLE-FINANCIAL-INDEX+)
-	 (:old +JP-NUMERAL-TABLE-OLD-INDEX+)
-	 (:positional +JP-NUMERAL-SIGN-LIST-POSITIONAL-INDEX+))
-       +jp-numeral-sign-list+))
+  (get-jp-numeral-from-list usage-sym
+			    +jp-numeral-sign-list+))
   
 (defun get-jp-numeral-parts-of (usage-sym)
-  (nth (ecase usage-sym
-	 (:normal +JP-NUMERAL-TABLE-NORMAL-INDEX+)
-	 (:financial +JP-NUMERAL-TABLE-FINANCIAL-INDEX+)
-	 (:old +JP-NUMERAL-TABLE-OLD-INDEX+)
-	 (:positional +JP-NUMERAL-SIGN-LIST-POSITIONAL-INDEX+))
-       +JP-NUMERAL-FRACTION-PARTS-OF-LIST+))
-  
+  (get-jp-numeral-from-list usage-sym
+			    +JP-NUMERAL-FRACTION-PARTS-OF-LIST+))
      
 
 (defun make-jp-numeral-digits4-string (digits4 style)

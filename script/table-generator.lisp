@@ -40,14 +40,11 @@
     (9 . ("九" nil "玖"))))
 
 (defun make-jp-numeral-decimal-alist-load-form ()
-  (loop with ret = nil
-     for (num . (normal financial old)) in +jp-numeral-decimal-alist+
+  (loop for (num . (normal financial old)) in +jp-numeral-decimal-alist+
      as normal-octets = (to-octets-printer normal nil)
      as financial-octets = (to-octets-printer financial normal-octets)
      as old-octets = (to-octets-printer old financial-octets)
-     do (push (cons num (vector normal-octets financial-octets old-octets nil))
-	      ret)
-     finally (return (nreverse ret))))
+     collect (cons num (vector normal-octets financial-octets old-octets))))
 
 
 (defconstant +jp-numeral-power-alist+
@@ -61,7 +58,7 @@
     (12 . "兆")
     (16 . "京")
     (20 . "垓")
-    (24 . (#(240 165 157 177) nil "秭" "秭")) ; U+25771 may be out of Lisp string..
+    (24 . (#(240 165 157 177) nil "秭")) ; U+25771 may be out of Lisp string..
     ;; BUG: babel on ACL makes #(237 161 149 237 189 177) from U+25771 !!
     (28 . "穣")
     (32 . "溝")
@@ -98,28 +95,23 @@
     (-21 . "清浄")))
 
 (defun make-jp-numeral-power-alist-load-form ()
-  (loop with ret = nil
-     for (i . data) in +jp-numeral-power-alist+
-     do (etypecase data
-	  (string
-	   (let ((octets (to-octets-printer data nil)))
-	     (push (cons i (vector octets octets octets nil))
-		   ret)))
-	  (list
-	   (destructuring-bind (normal financial old &optional unicode-bmp-alternative) data
-	     (let* ((normal-octets (etypecase normal
-				     (string
-				      (to-octets-printer normal nil))
-				     (vector
-				      (make-instance 'octets-printer
-						     :octets normal))))
-		    (financial-octets (to-octets-printer financial normal-octets))
-		    (old-octets (to-octets-printer old financial-octets))
-		    (alt-octets (to-octets-printer unicode-bmp-alternative nil)))
-	       (push (cons i (vector normal-octets financial-octets old-octets
-				     alt-octets))
-		     ret)))))
-     finally (return (nreverse ret))))
+  (loop for (i . data) in +jp-numeral-power-alist+
+     collect
+     (etypecase data
+       (string
+	(let ((octets (to-octets-printer data nil)))
+	  (cons i (vector octets octets octets))))
+       (list
+	(destructuring-bind (normal financial old) data
+	  (let* ((normal-octets (etypecase normal
+				  (string
+				   (to-octets-printer normal nil))
+				  (vector
+				   (make-instance 'octets-printer
+						  :octets normal))))
+		 (financial-octets (to-octets-printer financial normal-octets))
+		 (old-octets (to-octets-printer old financial-octets)))
+	    (cons i (vector normal-octets financial-octets old-octets))))))))
 
 
 (defconstant +jp-numeral-power-max+
@@ -161,24 +153,21 @@
 	(format stream "~S~%"
 		`(defconstant ,(gen-output-symbol '+jp-numeral-table-old-index+) 2))
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+jp-numeral-table-alternative-in-bmp-index+) 3))
+		`(defconstant ,(gen-output-symbol '+jp-numeral-table-positional-index+) 3))
 	(terpri stream)
 	(format stream "~S~%"
 		`(defconstant ,(gen-output-symbol '+jp-numeral-decimal-alist+)
 		   ',(make-jp-numeral-decimal-alist-load-form)
-		   "A vector of (<normal> <financial> <old> <alternative-in-BMP-of-Unicode>)"))
+		   "A vector of (<normal> <financial> <old>)"))
 	(terpri stream)
 	(format stream "~S~%"
 		`(defconstant ,(gen-output-symbol '+jp-numeral-power-alist+)
 		   ',(make-jp-numeral-power-alist-load-form)
-		   "An alist of (<power> . (<normal> <financial> <old> <alternative-in-BMP-of-Unicode>))"))
+		   "An alist of (<power> . (<normal> <financial> <old>))"))
 	(terpri stream)
 	(format stream "~S~%"
 		`(defconstant ,(gen-output-symbol '+jp-numeral-power-max+)
 		   ,+jp-numeral-power-max+))
-	(terpri stream)
-	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+jp-numeral-sign-list-positional-index+) 3))
 	(terpri stream)
 	(format stream "~S~%"
 		`(defconstant ,(gen-output-symbol '+jp-numeral-sign-list+)
