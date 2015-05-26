@@ -3,4 +3,4 @@
 (defpackage jp-numeral
   (:use :cl)
   (:export :pprint-jp-numeral
-	   :p))
+	   :j))

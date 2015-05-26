@@ -63,7 +63,7 @@ CL-USER> (format nil "~:@/jp-numeral:pprint-jp-numeral/" 12345687890)
 
 (stub)
 
-## p
+## j
 
 (stub)
 

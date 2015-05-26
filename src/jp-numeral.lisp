@@ -21,7 +21,7 @@
     (aref (cdr a-entry)
 	  (style-to-index style nil))))
 
-(defun get-sign (style)
+(defun get-minus-sign (style)
   (aref +minus-sign+
 	(style-to-index style t)))
   
@@ -32,6 +32,22 @@
 (defun get-radix-point (style)
   +radix-point+)
      
+(defun translate-char (char style)
+  (case char
+    (#\0 (get-digit 0 style))
+    (#\1 (get-digit 1 style))
+    (#\2 (get-digit 2 style))
+    (#\3 (get-digit 3 style))
+    (#\4 (get-digit 4 style))
+    (#\5 (get-digit 5 style))
+    (#\6 (get-digit 6 style))
+    (#\7 (get-digit 7 style))
+    (#\8 (get-digit 8 style))
+    (#\9 (get-digit 9 style))
+    (#\- (get-minus-sign style))
+    (#\/ (get-parts-of style))
+    (#\. (get-radix-point style))
+    (t (string char))))
 
 ;;; Conditions
 
@@ -43,6 +59,13 @@
 
 
 ;;; Writers
+
+(defun make-positional-integer-string (object)
+  (declare (type integer object))
+  ;; TODO: Can this be usable for float?
+  (loop with lispstr = (format nil "~D" object)
+     for c across lispstr
+     collect (translate-char c :positional)))
 
 (defun make-digits4-string (digits4 style)
   (declare (type (integer 0 9999) digits4))
@@ -73,18 +96,6 @@
 	      (put-n (get-digit d0 style)))))))
     buf))
 
-(defun make-positional-integer-string (object)
-  (declare (type integer object))
-  (let ((strs nil))
-    (loop for power from 0
-       for (rest digit) = (multiple-value-list (floor (abs object) 10))
-       then (multiple-value-list (floor rest 10))
-       do (push (get-digit digit :positional) strs)
-       while (> rest 0))
-    (when (minusp object)
-      (push (get-sign :positional) strs))
-    strs))
-
 (defun make-integer-string (object style)
   (declare (type integer object))
   (when (eq style :positional)
@@ -107,11 +118,11 @@
 	    (push digits4-str strs)
 	  while (> rest 0))
        (when (minusp object)
-	 (push (get-sign style) strs))
+	 (push (get-minus-sign style) strs))
        strs))))
 
 ;; cl:format interface
-(defun pprint-jp-numeral (stream object &optional colon-p at-sign-p)
+(defun pprint-jp-numeral (stream object &optional colon-p at-sign-p d)
   (unless (numberp object)
     (error "~A is not an expected type for jp-numeral" (type-of object)))
   (unless (= *print-base* 10)
@@ -130,7 +141,7 @@
 	(ratio
 	 (let ((numerator-strs (make-integer-string (abs (numerator object)) style))
 	       (numerator-sign-str (if (minusp (numerator object))
-				       (get-sign style) ""))
+				       (get-minus-sign style) ""))
 	       (denominator-strs (make-integer-string (denominator object) style))
 	       (parts-of-str (get-parts-of style)))
 	   ;; (assert (plusp (denominator object))) ; Hyperspec 12.1.3.2
@@ -147,31 +158,5 @@
 		  (write-string-list numerator-strs)))))))))
 
 ;; TODO: rewrite with appropriate args.
-(setf (fdefinition 'p)
+(setf (fdefinition 'j)
       #'pprint-jp-numeral)
-
-;; Can this be written as below?
-#|
-(defun pprint-jp-numeral-positional (stream object)
-  (loop with lispstr = 
-       (let* ((*print-radix* nil)
-	      (*print-base* 10))
-	 (princ-to-string object))
-       for c across lispstr
-       as jpc = (case c
-		  (#\0 (get-digit 0 :positional))
-		  (#\1 (get-digit 1 :positional))
-		  (#\2 (get-digit 2 :positional))
-		  (#\3 (get-digit 3 :positional))
-		  (#\4 (get-digit 4 :positional))
-		  (#\5 (get-digit 5 :positional))
-		  (#\6 (get-digit 6 :positional))
-		  (#\7 (get-digit 7 :positional))
-		  (#\8 (get-digit 8 :positional))
-		  (#\9 (get-digit 9 :positional))
-		  (#\- (get-sign :positional))
-		  (#\/ (get-parts-of :positional))
-		  (#\. (get-radix-point :positional))
-		  (t (string c)))
-       do (write-string jpc stream)))
-|#
