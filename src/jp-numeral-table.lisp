@@ -1,147 +1,105 @@
 (IN-PACKAGE "JP-NUMERAL")
 
-(DEFCONSTANT +JP-NUMERAL-TABLE-NORMAL-INDEX+ 0)
-(DEFCONSTANT +JP-NUMERAL-TABLE-FINANCIAL-INDEX+ 1)
-(DEFCONSTANT +JP-NUMERAL-TABLE-OLD-INDEX+ 2)
-(DEFCONSTANT +JP-NUMERAL-TABLE-POSITIONAL-INDEX+ 3)
+(DEFCONSTANT +TABLE-NORMAL-INDEX+ 0)
+(DEFCONSTANT +TABLE-FORMAL-INDEX+ 1)
+(DEFCONSTANT +TABLE-OLD-INDEX+ 2)
+(DEFCONSTANT +TABLE-POSITIONAL-INDEX+ 3)
 
-(DEFCONSTANT +JP-NUMERAL-DECIMAL-ALIST+
+(DEFCONSTANT +DIGITS+
     (QUOTE
-     ((0
-       . #(#1=#.(BABEL:OCTETS-TO-STRING
-                   (MAKE-ARRAY '(3)
-                     :INITIAL-CONTENTS '(227 128 135)
-                     . #2=(:ELEMENT-TYPE '(UNSIGNED-BYTE 8)))
-                  . #3=(:ENCODING :UTF-8))
-           #1#
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(233 155 182)
-                  . #2#)
-               . #3#)))
-      (1
-       . #(#.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(228 184 128)
-                  . #2#)
-               . #3#)
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(229 163 177)
-                  . #2#)
-               . #3#)
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(229 163 185)
-                  . #2#)
-               . #3#)))
-      (2
-       . #(#.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(228 186 140)
-                  . #2#)
-               . #3#)
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(229 188 144)
-                  . #2#)
-               . #3#)
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(232 178 179)
-                  . #2#)
-               . #3#)))
-      (3
-       . #(#.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(228 184 137)
-                  . #2#)
-               . #3#)
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(229 143 130)
-                  . #2#)
-               . #3#)
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(229 143 131)
-                  . #2#)
-               . #3#)))
-      (4
-       . #(#4=#.(BABEL:OCTETS-TO-STRING
-                   (MAKE-ARRAY '(3)
-                     :INITIAL-CONTENTS '(229 155 155)
-                     . #2#)
-                  . #3#)
-           #4#
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(232 130 134)
-                  . #2#)
-               . #3#)))
-      (5
-       . #(#5=#.(BABEL:OCTETS-TO-STRING
-                   (MAKE-ARRAY '(3)
-                     :INITIAL-CONTENTS '(228 186 148)
-                     . #2#)
-                  . #3#)
-           #5#
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(228 188 141)
-                  . #2#)
-               . #3#)))
-      (6
-       . #(#6=#.(BABEL:OCTETS-TO-STRING
-                   (MAKE-ARRAY '(3)
-                     :INITIAL-CONTENTS '(229 133 173)
-                     . #2#)
-                  . #3#)
-           #6#
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(233 153 184)
-                  . #2#)
-               . #3#)))
-      (7
-       . #(#7=#.(BABEL:OCTETS-TO-STRING
-                   (MAKE-ARRAY '(3)
-                     :INITIAL-CONTENTS '(228 184 131)
-                     . #2#)
-                  . #3#)
-           #7#
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(230 159 146)
-                  . #2#)
-               . #3#)))
-      (8
-       . #(#8=#.(BABEL:OCTETS-TO-STRING
-                   (MAKE-ARRAY '(3)
-                     :INITIAL-CONTENTS '(229 133 171)
-                     . #2#)
-                  . #3#)
-           #8#
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(230 141 140)
-                  . #2#)
-               . #3#)))
-      (9
-       . #(#9=#.(BABEL:OCTETS-TO-STRING
-                   (MAKE-ARRAY '(3)
-                     :INITIAL-CONTENTS '(228 185 157)
-                     . #2#)
-                  . #3#)
-           #9#
-           #.(BABEL:OCTETS-TO-STRING
-                (MAKE-ARRAY '(3)
-                  :INITIAL-CONTENTS '(231 142 150)
-                  . #2#)
-               . #3#)))))
-  "A vector of (<normal> <financial> <old>)")
+     #(#(#1=#.(BABEL:OCTETS-TO-STRING
+                 (MAKE-ARRAY '(3)
+                   :INITIAL-CONTENTS '(227 128 135)
+                   . #2=(:ELEMENT-TYPE '(UNSIGNED-BYTE 8)))
+                . #3=(:ENCODING :UTF-8))
+         #1#
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(233 155 182) . #2#)
+             . #3#))
+       #(#.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(228 184 128) . #2#)
+             . #3#)
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(229 163 177) . #2#)
+             . #3#)
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(229 163 185) . #2#)
+             . #3#))
+       #(#.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(228 186 140) . #2#)
+             . #3#)
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(229 188 144) . #2#)
+             . #3#)
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(232 178 179) . #2#)
+             . #3#))
+       #(#.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(228 184 137) . #2#)
+             . #3#)
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(229 143 130) . #2#)
+             . #3#)
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(229 143 131) . #2#)
+             . #3#))
+       #(#4=#.(BABEL:OCTETS-TO-STRING
+                 (MAKE-ARRAY '(3)
+                   :INITIAL-CONTENTS '(229 155 155)
+                   . #2#)
+                . #3#)
+         #4#
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(232 130 134) . #2#)
+             . #3#))
+       #(#5=#.(BABEL:OCTETS-TO-STRING
+                 (MAKE-ARRAY '(3)
+                   :INITIAL-CONTENTS '(228 186 148)
+                   . #2#)
+                . #3#)
+         #5#
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(228 188 141) . #2#)
+             . #3#))
+       #(#6=#.(BABEL:OCTETS-TO-STRING
+                 (MAKE-ARRAY '(3)
+                   :INITIAL-CONTENTS '(229 133 173)
+                   . #2#)
+                . #3#)
+         #6#
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(233 153 184) . #2#)
+             . #3#))
+       #(#7=#.(BABEL:OCTETS-TO-STRING
+                 (MAKE-ARRAY '(3)
+                   :INITIAL-CONTENTS '(228 184 131)
+                   . #2#)
+                . #3#)
+         #7#
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(230 159 146) . #2#)
+             . #3#))
+       #(#8=#.(BABEL:OCTETS-TO-STRING
+                 (MAKE-ARRAY '(3)
+                   :INITIAL-CONTENTS '(229 133 171)
+                   . #2#)
+                . #3#)
+         #8#
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(230 141 140) . #2#)
+             . #3#))
+       #(#9=#.(BABEL:OCTETS-TO-STRING
+                 (MAKE-ARRAY '(3)
+                   :INITIAL-CONTENTS '(228 185 157)
+                   . #2#)
+                . #3#)
+         #9#
+         #.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(231 142 150) . #2#)
+             . #3#))))
+  "A vector of (<normal> <formal> <old>)")
 
-(DEFCONSTANT +JP-NUMERAL-POWER-ALIST+
+(DEFCONSTANT +POWER-ALIST+
     (QUOTE
      ((0
        . #(#1=#.(BABEL:OCTETS-TO-STRING
@@ -523,57 +481,65 @@
                       . #2#)
                    . #3#)
            #44# #44#))))
-  "An alist of (<power> . (<normal> <financial> <old>))")
+  "An alist of (<power> . (<normal> <formal> <old>))")
 
-(DEFCONSTANT +JP-NUMERAL-POWER-MAX+ 68)
+(DEFCONSTANT +POWER-MAX+ 68)
 
-(DEFCONSTANT +JP-NUMERAL-SIGN-LIST+
+(DEFCONSTANT +MINUS-SIGN+
     (QUOTE
-     (#.(BABEL:OCTETS-TO-STRING
-           (MAKE-ARRAY '(12)
-             :INITIAL-CONTENTS '(227
-                                 131
-                                 158
-                                 227
-                                 130
-                                 164
-                                 227
-                                 131
-                                 138
-                                 227
-                                 130
-                                 185)
-             . #1=(:ELEMENT-TYPE '(UNSIGNED-BYTE 8)))
-          . #2=(:ENCODING :UTF-8))
-      #.(BABEL:OCTETS-TO-STRING
-           (MAKE-ARRAY '(6)
-             :INITIAL-CONTENTS '(232 178 160 227 129 174)
-             . #1#)
-          . #2#)
-      #.(BABEL:OCTETS-TO-STRING
-           (MAKE-ARRAY '(6)
-             :INITIAL-CONTENTS '(232 178 160 228 185 139)
-             . #1#)
-          . #2#)
-      #.(BABEL:OCTETS-TO-STRING
-           (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(226 136 146) . #1#)
-          . #2#)))
-  "A list of (<normal> <financial> <old> <positional>")
+     #(#.(BABEL:OCTETS-TO-STRING
+            (MAKE-ARRAY '(12)
+              :INITIAL-CONTENTS '(227
+                                  131
+                                  158
+                                  227
+                                  130
+                                  164
+                                  227
+                                  131
+                                  138
+                                  227
+                                  130
+                                  185)
+              . #1=(:ELEMENT-TYPE '(UNSIGNED-BYTE 8)))
+           . #2=(:ENCODING :UTF-8))
+       #.(BABEL:OCTETS-TO-STRING
+            (MAKE-ARRAY '(6)
+              :INITIAL-CONTENTS '(232 178 160 227 129 174)
+              . #1#)
+           . #2#)
+       #.(BABEL:OCTETS-TO-STRING
+            (MAKE-ARRAY '(6)
+              :INITIAL-CONTENTS '(232 178 160 228 185 139)
+              . #1#)
+           . #2#)
+       #.(BABEL:OCTETS-TO-STRING
+            (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(226 136 146) . #1#)
+           . #2#)))
+  "A vector of (<normal> <formal> <old> <positional>")
 
-(DEFCONSTANT +JP-NUMERAL-FRACTION-PARTS-OF-LIST+
+(DEFCONSTANT +FRACTION-PARTS-OF+
     (QUOTE
-     (#1=#.(BABEL:OCTETS-TO-STRING
-              (MAKE-ARRAY '(6)
-                :INITIAL-CONTENTS '(229 136 134 227 129 174)
-                . #2=(:ELEMENT-TYPE '(UNSIGNED-BYTE 8)))
-             . #3=(:ENCODING :UTF-8))
-      #1#
-      #.(BABEL:OCTETS-TO-STRING
-           (MAKE-ARRAY '(6)
-             :INITIAL-CONTENTS '(229 136 134 228 185 139)
-             . #2#)
-          . #3#)
-      #.(BABEL:OCTETS-TO-STRING
-           (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(239 188 143) . #2#)
-          . #3#)))
-  "A list of (<normal> <financial> <old> <positional>")
+     #(#1=#.(BABEL:OCTETS-TO-STRING
+               (MAKE-ARRAY '(6)
+                 :INITIAL-CONTENTS '(229 136 134 227 129 174)
+                 . #2=(:ELEMENT-TYPE '(UNSIGNED-BYTE 8)))
+              . #3=(:ENCODING :UTF-8))
+       #1#
+       #.(BABEL:OCTETS-TO-STRING
+            (MAKE-ARRAY '(6)
+              :INITIAL-CONTENTS '(229 136 134 228 185 139)
+              . #2#)
+           . #3#)
+       #.(BABEL:OCTETS-TO-STRING
+            (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(239 188 143) . #2#)
+           . #3#)))
+  "A vector of (<normal> <formal> <old> <positional>")
+
+(DEFCONSTANT +RADIX-POINT+
+    (QUOTE
+     #.(BABEL:OCTETS-TO-STRING
+          (MAKE-ARRAY '(3)
+            :INITIAL-CONTENTS '(227 131 187)
+            :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
+         :ENCODING :UTF-8)))

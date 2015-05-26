@@ -2,4 +2,5 @@
 
 (defpackage jp-numeral
   (:use :cl)
-  (:export :pprint-jp-numeral))
+  (:export :pprint-jp-numeral
+	   :p))
