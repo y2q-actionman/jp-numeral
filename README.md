@@ -32,7 +32,7 @@ CL-USER> (format nil "~/jp-numeral:pprint-jp-numeral/" 12345687890)
 
 ## 大字を使用する
 
-`:` フラグを使用する。
+`:` 修飾子を使用する。
 
 ```
 CL-USER> (format nil "~:/jp-numeral:pprint-jp-numeral/" 12345687890)
@@ -41,7 +41,7 @@ CL-USER> (format nil "~:/jp-numeral:pprint-jp-numeral/" 12345687890)
 
 ## 旧字体を使用する
 
-`@` フラグを使用する。
+`@` 修飾子を使用する。
 
 ```
 CL-USER> (format nil "~@/jp-numeral:pprint-jp-numeral/" 12345687890)
@@ -50,7 +50,7 @@ CL-USER> (format nil "~@/jp-numeral:pprint-jp-numeral/" 12345687890)
 
 ## 位取り記数法を使用する
 
-`:` フラグと `@` フラグを併用する。
+`:` 修飾子と `@` 修飾子を併用する。
 
 ```
 CL-USER> (format nil "~:@/jp-numeral:pprint-jp-numeral/" 12345687890)
@@ -72,6 +72,6 @@ CL-USER> (format nil "~:@/jp-numeral:pprint-jp-numeral/" 12345687890)
 
 - ~~0 の扱い~~
 - ~~負の数~~
-- 桁の上限や下限を越えた時の処置
 - ~~分数~~
 - 浮動小数点数
+- 桁の上限や下限を越えた時の処置

@@ -158,7 +158,9 @@
 			  :if-does-not-exist :create)
     (flet ((gen-output-symbol (sym)
 	     (intern (symbol-name sym) *package*)))
-      (let ((*print-circle* t))
+      (let ((*print-circle* t)
+	    ;; (*print-pretty* nil) ; currently commented out for debug. TODO: enable this.
+	    )
 	(format stream "~S~%"
 		`(in-package ,(package-name *package*)))
 	(terpri stream)

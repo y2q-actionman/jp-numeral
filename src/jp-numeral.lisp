@@ -1,5 +1,7 @@
 (in-package :jp-numeral)
 
+;;; Accessors to the jp-numeral-table.
+
 (defun style-to-index (style enable-positional-p)
   (ecase style
     (:normal +TABLE-NORMAL-INDEX+)
@@ -26,11 +28,24 @@
 (defun get-parts-of (style)
   (aref +fraction-parts-of+
 	(style-to-index style t)))
+
+(defun get-radix-point (style)
+  +radix-point+)
      
 
+;;; Conditions
+
+(define-condition overflow-error (error)
+  ())
+
+(define-condition underflow-error (error)
+  ())
+
+
+;;; Writers
+
 (defun make-digits4-string (digits4 style)
-  (declare (type integer digits4))
-  (assert (<= 0 digits4 9999))
+  (declare (type (integer 0 9999) digits4))
   (let ((fill-1 (ecase style
 		  (:normal nil)
 		  ((:formal :old) t)))
@@ -57,9 +72,6 @@
 	    (unless (zerop d0)
 	      (put-n (get-digit d0 style)))))))
     buf))
-
-(define-condition overflow-error (error)
-  ())
 
 (defun make-positional-integer-string (object)
   (declare (type integer object))
@@ -137,3 +149,29 @@
 ;; TODO: rewrite with appropriate args.
 (setf (fdefinition 'p)
       #'pprint-jp-numeral)
+
+;; Can this be written as below?
+#|
+(defun pprint-jp-numeral-positional (stream object)
+  (loop with lispstr = 
+       (let* ((*print-radix* nil)
+	      (*print-base* 10))
+	 (princ-to-string object))
+       for c across lispstr
+       as jpc = (case c
+		  (#\0 (get-digit 0 :positional))
+		  (#\1 (get-digit 1 :positional))
+		  (#\2 (get-digit 2 :positional))
+		  (#\3 (get-digit 3 :positional))
+		  (#\4 (get-digit 4 :positional))
+		  (#\5 (get-digit 5 :positional))
+		  (#\6 (get-digit 6 :positional))
+		  (#\7 (get-digit 7 :positional))
+		  (#\8 (get-digit 8 :positional))
+		  (#\9 (get-digit 9 :positional))
+		  (#\- (get-sign :positional))
+		  (#\/ (get-parts-of :positional))
+		  (#\. (get-radix-point :positional))
+		  (t (string c)))
+       do (write-string jpc stream)))
+|#
