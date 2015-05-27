@@ -538,8 +538,10 @@
 
 (DEFCONSTANT +RADIX-POINT+
     (QUOTE
-     #.(BABEL:OCTETS-TO-STRING
-          (MAKE-ARRAY '(3)
-            :INITIAL-CONTENTS '(227 131 187)
-            :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
-         :ENCODING :UTF-8)))
+     #(#1=#.(BABEL:OCTETS-TO-STRING
+               (MAKE-ARRAY '(3)
+                 :INITIAL-CONTENTS '(227 131 187)
+                 :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
+              :ENCODING :UTF-8)
+       #1# #1# #1#))
+  "A vector of (<normal> <formal> <old> <positional>")

@@ -121,43 +121,38 @@
   (apply #'max (mapcar #'car +power-alist+)))
 
 
-(defconstant +minus-sign+
-  #("マイナス" "負の" "負之" "−"))
-
-(defun make-minus-sign-load-form ()
-  (loop with buf = (make-array (array-dimensions +minus-sign+)
-			       :fill-pointer 0)
-     for str across +minus-sign+
-     do (vector-push (to-octets-printer str) buf)
-     finally (return buf)))
-
-
-(defconstant +fraction-parts-of+
-  #("分の" nil "分之" "／"))
-
-(defun make-fraction-parts-of-load-form ()
-  (loop with buf = (make-array (array-dimensions +fraction-parts-of+)
+(defun make-string-array-load-form (arr)
+  (loop with buf = (make-array (array-dimensions arr)
 			       :fill-pointer 0)
      as prev-octets = nil then (or str-octets prev-octets)
-     for str across +fraction-parts-of+
+     for str across arr
      as str-octets = (or (to-octets-printer str) prev-octets)
      do (vector-push str-octets buf)
      finally (return buf)))
 
 
-(defconstant +radix-point+
-  "・")
+(defconstant +minus-sign+
+  #("マイナス" "負の" "負之" "−"))
 
-(defun make-radix-point-load-form ()
-  (to-octets-printer +radix-point+))
+(defconstant +fraction-parts-of+
+  #("分の" nil "分之" "／"))
+
+(defconstant +radix-point+
+  #("・" nil nil nil))
 
 
 (defun generate-file (output-file &optional (*package* *package*))
   (with-open-file (stream output-file
 			  :direction :output :if-exists :rename
 			  :if-does-not-exist :create)
-    (flet ((gen-output-symbol (sym)
-	     (intern (symbol-name sym) *package*)))
+    (labels ((gen-output-symbol (sym)
+	       (intern (symbol-name sym) *package*))
+	     (make-const-num-form (sym val)
+		`(defconstant ,(gen-output-symbol sym) ,val))
+	     (make-str-array-form (sym)
+		`(defconstant ,(gen-output-symbol sym)
+		   ',(make-string-array-load-form (symbol-value sym))
+		   "A vector of (<normal> <formal> <old> <positional>")))
       (let ((*print-circle* t)
 	    ;; (*print-pretty* nil) ; currently commented out for debug. TODO: enable this.
 	    )
@@ -165,13 +160,13 @@
 		`(in-package ,(package-name *package*)))
 	(terpri stream)
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+table-normal-index+) 0))
+		(make-const-num-form '+table-normal-index+ 0))
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+table-formal-index+) 1))
+		(make-const-num-form '+table-formal-index+ 1))
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+table-old-index+) 2))
+		(make-const-num-form '+table-old-index+ 2))
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+table-positional-index+) 3))
+		(make-const-num-form '+table-positional-index+ 3))
 	(terpri stream)
 	(format stream "~S~%"
 		`(defconstant ,(gen-output-symbol '+digits+)
@@ -184,20 +179,14 @@
 		   "An alist of (<power> . (<normal> <formal> <old>))"))
 	(terpri stream)
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+power-max+)
-		   ,+power-max+))
+		(make-const-num-form '+power-max+ +power-max+))
 	(terpri stream)
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+minus-sign+)
-		   ',(make-minus-sign-load-form)
-		   "A vector of (<normal> <formal> <old> <positional>"))
+		(make-str-array-form '+minus-sign+))
 	(terpri stream)
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+fraction-parts-of+)
-		   ',(make-fraction-parts-of-load-form)
-		   "A vector of (<normal> <formal> <old> <positional>"))
+		(make-str-array-form '+fraction-parts-of+))
 	(terpri stream)
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+radix-point+)
-		   ',(make-radix-point-load-form)))
+		(make-str-array-form '+radix-point+))
 	))))

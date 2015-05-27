@@ -30,10 +30,11 @@
 	(style-to-index style t)))
 
 (defun get-radix-point (style)
-  +radix-point+)
+  (aref +radix-point+
+	(style-to-index style t)))
      
 (defun translate-char (char style)
-  (case char
+  (ccase char
     (#\0 (get-digit 0 style))
     (#\1 (get-digit 1 style))
     (#\2 (get-digit 2 style))
@@ -46,8 +47,7 @@
     (#\9 (get-digit 9 style))
     (#\- (get-minus-sign style))
     (#\/ (get-parts-of style))
-    (#\. (get-radix-point style))
-    (t (string char))))
+    (#\. (get-radix-point style))))
 
 ;;; Conditions
 
@@ -62,7 +62,6 @@
 
 (defun make-positional-integer-string (object)
   (declare (type integer object))
-  ;; TODO: Can this be usable for float?
   (loop with lispstr = (format nil "~D" object)
      for c across lispstr
      collect (translate-char c :positional)))
@@ -98,13 +97,13 @@
 
 (defun make-integer-string (object style)
   (declare (type integer object))
-  (when (eq style :positional)
+  (when (eq style :positional)		; TODO: merge this with the COND below.
     (return-from make-integer-string
       (make-positional-integer-string object)))
   (cond
     ((zerop object)
      (list (get-digit 0 style)))
-    ((>= object (expt 10 (+ +power-max+ 4)))
+    ((>= object (expt 10 (+ +power-max+ 4))) ; TODO: merge this with the LOOP below.
      (error 'overflow-error))
     (t
      (let ((strs nil))
@@ -121,8 +120,21 @@
 	 (push (get-minus-sign style) strs))
        strs))))
 
+(defun make-float-string (object style digits-after-dot scale)
+  (declare (type float object))
+  (unless (eq style :positional)
+    (error "under implementation.."))
+  ;; TODO: treat infinities
+  (loop with lispstr = (format nil "~,v,vF" digits-after-dot scale object)
+     for c across lispstr
+     collect (translate-char c :positional)))
+  ;; )
+
 ;; cl:format interface
-(defun pprint-jp-numeral (stream object &optional colon-p at-sign-p d)
+(defparameter *digits-after-dot* 2)
+
+(defun pprint-jp-numeral (stream object &optional colon-p at-sign-p
+			  (digits-after-dot *digits-after-dot*) (scale 0))
   (unless (numberp object)
     (error "~A is not an expected type for jp-numeral" (type-of object)))
   (unless (= *print-base* 10)
@@ -155,7 +167,10 @@
 		  (write-string numerator-sign-str stream)
 		  (write-string-list denominator-strs)
 		  (write-string parts-of-str stream)
-		  (write-string-list numerator-strs)))))))))
+		  (write-string-list numerator-strs)))))
+	(float
+	 (let ((strs (make-float-string object style digits-after-dot scale)))
+	   (write-string-list strs)))))))
 
 ;; TODO: rewrite with appropriate args.
 (setf (fdefinition 'j)
