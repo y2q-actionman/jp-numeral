@@ -1,9 +1,9 @@
 (IN-PACKAGE "JP-NUMERAL")
 
-(DEFCONSTANT +TABLE-NORMAL-INDEX+ 0)
-(DEFCONSTANT +TABLE-FORMAL-INDEX+ 1)
-(DEFCONSTANT +TABLE-OLD-INDEX+ 2)
-(DEFCONSTANT +TABLE-POSITIONAL-INDEX+ 3)
+(DEFCONSTANT +TABLE-NORMAL-INDEX+ 0 NIL)
+(DEFCONSTANT +TABLE-FORMAL-INDEX+ 1 NIL)
+(DEFCONSTANT +TABLE-OLD-INDEX+ 2 NIL)
+(DEFCONSTANT +TABLE-POSITIONAL-INDEX+ 3 NIL)
 
 (DEFCONSTANT +DIGITS+
     (QUOTE
@@ -483,65 +483,64 @@
            #44# #44#))))
   "An alist of (<power> . (<normal> <formal> <old>))")
 
-(DEFCONSTANT +POWER-MAX+ 68)
+(DEFCONSTANT +POWER-MAX+ 68 NIL)
+
+(DEFCONSTANT +POWER-MIN+ -21 NIL)
 
 (DEFCONSTANT +MINUS-SIGN+
-    (QUOTE
-     #(#.(BABEL:OCTETS-TO-STRING
-            (MAKE-ARRAY '(12)
-              :INITIAL-CONTENTS '(227
-                                  131
-                                  158
-                                  227
-                                  130
-                                  164
-                                  227
-                                  131
-                                  138
-                                  227
-                                  130
-                                  185)
-              . #1=(:ELEMENT-TYPE '(UNSIGNED-BYTE 8)))
-           . #2=(:ENCODING :UTF-8))
-       #.(BABEL:OCTETS-TO-STRING
-            (MAKE-ARRAY '(6)
-              :INITIAL-CONTENTS '(232 178 160 227 129 174)
-              . #1#)
-           . #2#)
-       #.(BABEL:OCTETS-TO-STRING
-            (MAKE-ARRAY '(6)
-              :INITIAL-CONTENTS '(232 178 160 228 185 139)
-              . #1#)
-           . #2#)
-       #.(BABEL:OCTETS-TO-STRING
-            (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(226 136 146) . #1#)
-           . #2#)))
+    #(#.(BABEL:OCTETS-TO-STRING
+           (MAKE-ARRAY '(12)
+             :INITIAL-CONTENTS '(227
+                                 131
+                                 158
+                                 227
+                                 130
+                                 164
+                                 227
+                                 131
+                                 138
+                                 227
+                                 130
+                                 185)
+             . #1=(:ELEMENT-TYPE '(UNSIGNED-BYTE 8)))
+          . #2=(:ENCODING :UTF-8))
+      #.(BABEL:OCTETS-TO-STRING
+           (MAKE-ARRAY '(6)
+             :INITIAL-CONTENTS '(232 178 160 227 129 174)
+             . #1#)
+          . #2#)
+      #.(BABEL:OCTETS-TO-STRING
+           (MAKE-ARRAY '(6)
+             :INITIAL-CONTENTS '(232 178 160 228 185 139)
+             . #1#)
+          . #2#)
+      #.(BABEL:OCTETS-TO-STRING
+           (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(226 136 146) . #1#)
+          . #2#))
   "A vector of (<normal> <formal> <old> <positional>")
 
 (DEFCONSTANT +FRACTION-PARTS-OF+
-    (QUOTE
-     #(#1=#.(BABEL:OCTETS-TO-STRING
-               (MAKE-ARRAY '(6)
-                 :INITIAL-CONTENTS '(229 136 134 227 129 174)
-                 . #2=(:ELEMENT-TYPE '(UNSIGNED-BYTE 8)))
-              . #3=(:ENCODING :UTF-8))
-       #1#
-       #.(BABEL:OCTETS-TO-STRING
-            (MAKE-ARRAY '(6)
-              :INITIAL-CONTENTS '(229 136 134 228 185 139)
-              . #2#)
-           . #3#)
-       #.(BABEL:OCTETS-TO-STRING
-            (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(239 188 143) . #2#)
-           . #3#)))
+    #(#1=#.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(6)
+                :INITIAL-CONTENTS '(229 136 134 227 129 174)
+                . #2=(:ELEMENT-TYPE '(UNSIGNED-BYTE 8)))
+             . #3=(:ENCODING :UTF-8))
+      #1#
+      #.(BABEL:OCTETS-TO-STRING
+           (MAKE-ARRAY '(6)
+             :INITIAL-CONTENTS '(229 136 134 228 185 139)
+             . #2#)
+          . #3#)
+      #.(BABEL:OCTETS-TO-STRING
+           (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(239 188 143) . #2#)
+          . #3#))
   "A vector of (<normal> <formal> <old> <positional>")
 
 (DEFCONSTANT +RADIX-POINT+
-    (QUOTE
-     #(#1=#.(BABEL:OCTETS-TO-STRING
-               (MAKE-ARRAY '(3)
-                 :INITIAL-CONTENTS '(227 131 187)
-                 :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
-              :ENCODING :UTF-8)
-       #1# #1# #1#))
+    #(#1=#.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(3)
+                :INITIAL-CONTENTS '(227 131 187)
+                :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
+             :ENCODING :UTF-8)
+      #1# #1# #1#)
   "A vector of (<normal> <formal> <old> <positional>")

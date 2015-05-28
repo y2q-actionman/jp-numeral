@@ -120,6 +120,9 @@
 (defconstant +power-max+
   (apply #'max (mapcar #'car +power-alist+)))
 
+(defconstant +power-min+
+  (apply #'min (mapcar #'car +power-alist+)))
+
 
 (defun make-string-array-load-form (arr)
   (loop with buf = (make-array (array-dimensions arr)
@@ -147,11 +150,10 @@
 			  :if-does-not-exist :create)
     (labels ((gen-output-symbol (sym)
 	       (intern (symbol-name sym) *package*))
-	     (make-const-num-form (sym val)
-		`(defconstant ,(gen-output-symbol sym) ,val))
+	     (make-const-form (sym val &optional docstring)
+		`(defconstant ,(gen-output-symbol sym) ,val ,docstring))
 	     (make-str-array-form (sym)
-		`(defconstant ,(gen-output-symbol sym)
-		   ',(make-string-array-load-form (symbol-value sym))
+	       (make-const-form sym (make-string-array-load-form (symbol-value sym))
 		   "A vector of (<normal> <formal> <old> <positional>")))
       (let ((*print-circle* t)
 	    ;; (*print-pretty* nil) ; currently commented out for debug. TODO: enable this.
@@ -160,13 +162,13 @@
 		`(in-package ,(package-name *package*)))
 	(terpri stream)
 	(format stream "~S~%"
-		(make-const-num-form '+table-normal-index+ 0))
+		(make-const-form '+table-normal-index+ 0))
 	(format stream "~S~%"
-		(make-const-num-form '+table-formal-index+ 1))
+		(make-const-form '+table-formal-index+ 1))
 	(format stream "~S~%"
-		(make-const-num-form '+table-old-index+ 2))
+		(make-const-form '+table-old-index+ 2))
 	(format stream "~S~%"
-		(make-const-num-form '+table-positional-index+ 3))
+		(make-const-form '+table-positional-index+ 3))
 	(terpri stream)
 	(format stream "~S~%"
 		`(defconstant ,(gen-output-symbol '+digits+)
@@ -179,7 +181,10 @@
 		   "An alist of (<power> . (<normal> <formal> <old>))"))
 	(terpri stream)
 	(format stream "~S~%"
-		(make-const-num-form '+power-max+ +power-max+))
+		(make-const-form '+power-max+ +power-max+))
+	(terpri stream)
+	(format stream "~S~%"
+		(make-const-form '+power-min+ +power-min+))
 	(terpri stream)
 	(format stream "~S~%"
 		(make-str-array-form '+minus-sign+))

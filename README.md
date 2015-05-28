@@ -76,3 +76,5 @@ CL-USER> (format nil "~:@/jp-numeral:pprint-jp-numeral/" 12345687890)
 - 浮動小数点数
 - 桁の上限や下限を越えた時の処置
 - NAN と 無限値 -- 規定なし
+
+- "銭" と "割"
