@@ -48,9 +48,11 @@
   (aref +fraction-parts-of+
 	(style-to-index style t)))
 
-(defun get-radix-point (style)
-  (aref +radix-point+
-	(style-to-index style t)))
+(defun get-radix-point-char (style)
+  (let ((s (aref +radix-point+
+		 (style-to-index style t))))
+    (assert (= (length s) 1))
+    (char s 0)))
 
 
 ;;; Writers
@@ -74,12 +76,6 @@
     (otherwise
      (error 'bad-format-float-error))))
 
-
-(defun make-positional-integer-string (object)
-  (declare (type integer object))
-  (loop with lispstr = (format nil "~D" object)
-     for c across lispstr
-     collect (translate-char c :positional)))
 
 (defun make-digits4-string (digits4 style)
   (declare (type (integer 0 9999) digits4))
@@ -125,7 +121,8 @@
      as digits4-str = (make-digits4-string digits4 style)
      as power-str = (get-power power style)
      when (plusp (length digits4-str))
-     do (push power-str strs)
+     do (when power-str
+	  (push power-str strs))
        (push digits4-str strs)
      while (> rest 0)
      finally (return strs)))
@@ -137,67 +134,93 @@
      for i from (1+ (position #\. frac-part-l-str)) below (length frac-part-l-str)
      as c = (char frac-part-l-str i)
      for power downfrom -1
-     ;; TODO: cleanup
-     when (or (eq style :positional)
-	      (char/= #\0 c))
+     when (char/= #\0 c)
      collect (translate-char c style)
-     and unless (eq style :positional)
-     collect (get-power power style)))
+     and collect (get-power power style)))
 
 
-;; cl:format interface
-(defparameter *digits-after-dot* 2)
+(defun print-positional-jp-numeral (stream object &optional digits-after-dot scale decimal-mark)
+  (unless digits-after-dot
+    (setf digits-after-dot nil))
+  (unless scale
+    (setf scale 0))
+  (unless decimal-mark
+    (setf decimal-mark (get-radix-point-char :positional)))
+  (flet ((recurse (object)
+	   (print-positional-jp-numeral
+	    stream object digits-after-dot scale decimal-mark)))
+    (ctypecase object
+      (integer
+       (loop with lispstr = (format nil "~D" object)
+	  for c across lispstr
+	  do (write-string (translate-char c :positional)
+			   stream)))
+      (ratio
+       (recurse (numerator object))
+       (write-string (get-parts-of :positional) stream)
+       (recurse (denominator object)))
+      (float
+       (recurse (truncate object))
+       (write-char decimal-mark stream)
+       ;; TODO: treat infinities and the exponent marker
+       (loop with frac-part-l-str = (format nil "~,v,vF" digits-after-dot scale object)
+	  for i from (1+ (position #\. frac-part-l-str)) below (length frac-part-l-str)
+	  as c = (char frac-part-l-str i)
+	  do (write-string (translate-char c :positional) stream))))))
 
 (defun pprint-jp-numeral (stream object &optional colon-p at-sign-p
-			  (digits-after-dot *digits-after-dot*) (scale 0)
-			  decimal-mark)
+			  digits-after-dot scale decimal-mark
+			  &aux (style (cond ((and colon-p at-sign-p) :positional)
+					    (colon-p :formal)
+					    (at-sign-p :old)
+					    (t :normal))))
   (unless (numberp object)
     (error "~A is not an expected type for jp-numeral" (type-of object)))
   (unless (= *print-base* 10)
     (error "*print-base* must be 10 for jp-numeral"))
-  (let ((style (cond ((and colon-p at-sign-p) :positional)
-		     (colon-p :formal)
-		     (at-sign-p :old)
-		     (t :normal)))
-	(outputted? nil))
-    (flet ((write-string-list (str-list)
-	     (when str-list
-	       (setf outputted? t)
-	       (mapc #'(lambda (s) (write-string s stream)) str-list))))
-      (when (minusp object)
-	(write-string (get-minus-sign style) stream))
-      (ctypecase object
-	(integer
-	 ;; TODO: catch overflow-error, and use alternative string.
-	 (let ((strs (make-integer-string (abs object) style)))
-	   (write-string-list strs)))
-	(ratio
-	 ;; (assert (plusp (denominator object))) ; Hyperspec 12.1.3.2
-	 (let ((numerator-strs (make-integer-string (abs (numerator object)) style))
-	       (denominator-strs (make-integer-string (denominator object) style))
-	       (parts-of-str (get-parts-of style)))
-	   (cond ((eq style :positional)
-		  (write-string-list numerator-strs)
-		  (write-string parts-of-str stream)
-		  (write-string-list denominator-strs))
-		 (t
-		  ;; sign is printed as a mixed-fraction style.
-		  (write-string-list denominator-strs)
-		  (write-string parts-of-str stream)
-		  (write-string-list numerator-strs)))))
-	(float
-	 (let ((int-strs (make-integer-string (abs (truncate object)) style))
-	       (float-strs (make-fractional-part-string object style digits-after-dot scale)))
-	   (write-string-list int-strs)
-	   ;; FIXME: should print "〇割一分" ?
-	   (when outputted?
-	     (if decimal-mark 
-		 (write-char decimal-mark stream)
-		 (write-string (get-radix-point style) stream)))
-	   (write-string-list float-strs))))
-      (unless outputted?
-	(write-string (get-digit 0 style) stream)))))
+  (when (eq style :positional)
+    (return-from pprint-jp-numeral
+      (print-positional-jp-numeral stream object digits-after-dot scale decimal-mark)))
+  (unless digits-after-dot
+    (setf digits-after-dot (- +power-min+)))
+  (unless scale
+    (setf scale 0))
+  (unless decimal-mark
+    (setf decimal-mark (get-radix-point-char style)))
+  (let ((outputs nil))			; TODO: use with-output-to-string as a buffer.
+    (when (minusp object)
+      (alexandria:appendf outputs (get-minus-sign style)))
+    (ctypecase object
+      (integer
+       ;; TODO: catch overflow-error, and use alternative string.
+       (alexandria:appendf outputs
+			   (make-integer-string (abs object) style)))
+      (ratio
+       ;; (assert (plusp (denominator object))) ; Hyperspec 12.1.3.2
+       (let ((numerator-strs (make-integer-string (abs (numerator object)) style))
+	     (parts-of-str (get-parts-of style))
+	     (denominator-strs (make-integer-string (denominator object) style)))
+	 ;; sign is printed as a mixed-fraction style.
+	 (alexandria:appendf outputs
+			     denominator-strs
+			     (list parts-of-str)
+			     numerator-strs)))
+      (float
+       (let ((int-strs (make-integer-string (abs (truncate object)) style))
+	     (float-strs (make-fractional-part-string object style digits-after-dot scale)))
+	 (alexandria:appendf outputs int-strs)
+	 ;; FIXME: should print "〇割一分" ?
+	 (when outputs
+	   (alexandria:appendf outputs (list (string decimal-mark))))
+	 (alexandria:appendf outputs float-strs))))
+    (unless outputs
+      (alexandria:appendf outputs (get-digit 0 style)))
+    ;; write things
+    (loop for obj in outputs
+       do (write-string obj stream))))
 
+
+;;; cl:format interface
 
 ;; TODO: rewrite with appropriate args.
 (setf (fdefinition 'j)

@@ -51,8 +51,7 @@
 
 
 (defconstant +power-alist+
-  '((0 . ("" nil nil))
-    (1 . ("十" "拾" nil))
+  '((1 . ("十" "拾" nil))
     (2 . ("百" nil "佰"))
     (3 . ("千" nil "仟"))
     ;; myriads
