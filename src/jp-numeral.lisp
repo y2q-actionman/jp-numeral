@@ -79,41 +79,35 @@
 
 (defun make-digits4-string (digits4 style)
   (declare (type (integer 0 9999) digits4))
+  (assert (not (eq style :positional)))
   (let ((fill-1 (ecase style
 		  (:normal nil)
-		  ((:formal :old) t)))
-	(buf (make-array '(9) :element-type 'character :fill-pointer 0)))
-    (labels ((put-n (str)
-	       (loop for s across str
-		  do (vector-push-extend s buf)))
-	     (put-100-1000 (digit pow)
-	       (unless (zerop digit)
-		 (when (or (<= 2 digit 9)
-			   fill-1)
-		   (put-n (get-digit digit style)))
-		 (put-n (get-power pow style)))))
-      (multiple-value-bind (d3 d3-rest) (floor digits4 1000)
-	(put-100-1000 d3 3)
-	(multiple-value-bind (d2 d2-rest) (floor d3-rest 100)
-	  (put-100-1000 d2 2)
-	  ;; 0 - 99
-	  (multiple-value-bind (d1 d0) (floor d2-rest 10)
-	    (unless (zerop d1)
-	      (when (<= 2 d1 9)	       ; fill-1 is not respected here.
-		(put-n (get-digit d1 style)))
-	      (put-n (get-power 1 style)))
-	    (unless (zerop d0)
-	      (put-n (get-digit d0 style)))))))
-    buf))
+		  ((:formal :old) t))))
+    (with-output-to-string (buf-stream)
+      (labels ((put-n (str)
+		 (write-string str buf-stream))
+	       (put-100-1000 (digit pow)
+		 (unless (zerop digit)
+		   (when (or (<= 2 digit 9)
+			     fill-1)
+		     (put-n (get-digit digit style)))
+		   (put-n (get-power pow style)))))
+	(multiple-value-bind (d3 d3-rest) (floor digits4 1000)
+	  (put-100-1000 d3 3)
+	  (multiple-value-bind (d2 d2-rest) (floor d3-rest 100)
+	    (put-100-1000 d2 2)
+	    ;; 0 - 99
+	    (multiple-value-bind (d1 d0) (floor d2-rest 10)
+	      (unless (zerop d1)
+		(when (<= 2 d1 9)      ; fill-1 is not respected here.
+		  (put-n (get-digit d1 style)))
+		(put-n (get-power 1 style)))
+	      (unless (zerop d0)
+		(put-n (get-digit d0 style))))))))))
 
-(defun make-integer-string (object style)
+(defun print-jp-integer (stream object style)
   (declare (type (integer 0) object))
-  ;; TODO: cleanup if object == 0
-  ;; - make-integer-string -> ""
-  ;; - make-positional-integer-string -> "〇"
-  (when (eq style :positional)
-    (return-from make-integer-string
-      (make-positional-integer-string object)))
+  (assert (not (eq style :positional)))
   (loop with strs = nil
      for power from 0 by 4
      for (rest digits4) = (multiple-value-list (floor object 10000))
@@ -125,18 +119,20 @@
 	  (push power-str strs))
        (push digits4-str strs)
      while (> rest 0)
-     finally (return strs)))
+     finally
+       (mapc #'(lambda (s) (write-string s stream)) strs)))
 
-(defun make-fractional-part-string (object style digits-after-dot scale)
+(defun print-fractional-part (stream object style digits-after-dot scale)
   (declare (type float object))
+  (assert (not (eq style :positional)))
   ;; TODO: treat infinities
   (loop with frac-part-l-str = (format nil "~,v,vF" digits-after-dot scale object)
      for i from (1+ (position #\. frac-part-l-str)) below (length frac-part-l-str)
      as c = (char frac-part-l-str i)
      for power downfrom -1
      when (char/= #\0 c)
-     collect (translate-char c style)
-     and collect (get-power power style)))
+     do (write-string (translate-char c style) stream)
+       (write-string (get-power power style) stream)))
 
 
 (defun print-positional-jp-numeral (stream object &optional digits-after-dot scale decimal-mark)
@@ -187,37 +183,26 @@
     (setf scale 0))
   (unless decimal-mark
     (setf decimal-mark (get-radix-point-char style)))
-  (let ((outputs nil))			; TODO: use with-output-to-string as a buffer.
-    (when (minusp object)
-      (alexandria:appendf outputs (get-minus-sign style)))
-    (ctypecase object
-      (integer
-       ;; TODO: catch overflow-error, and use alternative string.
-       (alexandria:appendf outputs
-			   (make-integer-string (abs object) style)))
-      (ratio
-       ;; (assert (plusp (denominator object))) ; Hyperspec 12.1.3.2
-       (let ((numerator-strs (make-integer-string (abs (numerator object)) style))
-	     (parts-of-str (get-parts-of style))
-	     (denominator-strs (make-integer-string (denominator object) style)))
-	 ;; sign is printed as a mixed-fraction style.
-	 (alexandria:appendf outputs
-			     denominator-strs
-			     (list parts-of-str)
-			     numerator-strs)))
-      (float
-       (let ((int-strs (make-integer-string (abs (truncate object)) style))
-	     (float-strs (make-fractional-part-string object style digits-after-dot scale)))
-	 (alexandria:appendf outputs int-strs)
-	 ;; FIXME: should print "〇割一分" ?
-	 (when outputs
-	   (alexandria:appendf outputs (list (string decimal-mark))))
-	 (alexandria:appendf outputs float-strs))))
-    (unless outputs
-      (alexandria:appendf outputs (get-digit 0 style)))
-    ;; write things
-    (loop for obj in outputs
-       do (write-string obj stream))))
+  (let ((buf (make-array '(1) :element-type 'character :fill-pointer 0 :adjustable t)))
+    (with-output-to-string (buf-stream buf)
+      (when (minusp object)
+	(write-string (get-minus-sign style) buf-stream))
+      (ctypecase object
+	(integer
+	 ;; TODO: catch overflow-error, and use alternative string.
+	 (print-jp-integer buf-stream (abs object) style))
+	(ratio
+	 (print-jp-integer buf-stream (denominator object) style)
+	 (write-string (get-parts-of style) buf-stream)
+	 (print-jp-integer buf-stream (abs (numerator object)) style))
+	(float
+	 (print-jp-integer buf-stream (abs (truncate object)) style)
+	 (when (plusp (length buf))
+	   (write-char decimal-mark buf-stream))
+	 (print-fractional-part buf-stream object style digits-after-dot scale)))
+      (unless (plusp (length buf))
+	(write-string buf-stream (get-digit 0 style))))
+    (write-string buf stream)))
 
 
 ;;; cl:format interface
