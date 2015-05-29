@@ -142,6 +142,12 @@
 (defconstant +radix-point+
   #("・" nil nil nil))
 
+(defconstant +infinite+
+  #("無限大" nil nil nil))
+
+(defconstant +nan+
+  #("非数" nil nil nil))
+
 
 (defun generate-file (output-file &optional (*package* *package*))
   (with-open-file (stream output-file
@@ -193,4 +199,10 @@
 	(terpri stream)
 	(format stream "~S~%"
 		(make-str-array-form '+radix-point+))
+	(terpri stream)
+	(format stream "~S~%"
+		(make-str-array-form '+infinite+))
+	(terpri stream)
+	(format stream "~S~%"
+		(make-str-array-form '+nan+))
 	))))

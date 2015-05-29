@@ -537,3 +537,29 @@
              :ENCODING :UTF-8)
       #1# #1# #1#)
   "A vector of (<normal> <formal> <old> <positional>")
+
+(DEFCONSTANT +INFINITE+
+    #(#1=#.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(9)
+                :INITIAL-CONTENTS '(231
+                                    132
+                                    161
+                                    233
+                                    153
+                                    144
+                                    229
+                                    164
+                                    167)
+                :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
+             :ENCODING :UTF-8)
+      #1# #1# #1#)
+  "A vector of (<normal> <formal> <old> <positional>")
+
+(DEFCONSTANT +NAN+
+    #(#1=#.(BABEL:OCTETS-TO-STRING
+              (MAKE-ARRAY '(6)
+                :INITIAL-CONTENTS '(233 157 158 230 149 176)
+                :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
+             :ENCODING :UTF-8)
+      #1# #1# #1#)
+  "A vector of (<normal> <formal> <old> <positional>")

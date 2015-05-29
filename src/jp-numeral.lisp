@@ -1,15 +1,30 @@
 (in-package :jp-numeral)
 
+;;; Utils
+
+(defun positive-infinite-p (n)
+  (etypecase n
+    (short-float (> n most-positive-short-float))
+    (single-float (> n most-positive-single-float))
+    (double-float (> n most-positive-double-float))
+    (long-float (> n most-positive-long-float))))
+
+(defun negative-infinite-p (n)
+  (etypecase n
+    (short-float (< n most-negative-short-float))
+    (single-float (< n most-negative-single-float))
+    (double-float (< n most-negative-double-float))
+    (long-float (< n most-negative-long-float))))
+
 ;;; Conditions
 
-(define-condition overflow-error (error)
+(define-condition no-power-char-error (error)
   ())
 
-(define-condition underflow-error (error)
-  ())
-
-(define-condition exponent-marker-found-condition (serious-condition)
-  ())
+(define-condition exponent-marker-found-error (error)
+  ()
+  ;; TODO: take the argument into the slot.
+  (:report "Exponent markers are found. This is an internal BUG of jp-numeral."))
 
 (define-condition bad-format-float-error (error)
   ())
@@ -32,13 +47,12 @@
     (aref entry (style-to-index style nil))))
      
 (defun get-power (n style)
-  (when (>= n (+ +power-max+ 4))
-    (error 'overflow-error))
-  (when (< n +power-min+)
-    (error 'underflow-error))
+  (unless (<= +power-min+ n +power-max+)
+    (error 'no-power-char-error))
   (alexandria:if-let ((a-entry (assoc n +power-alist+)))
     (aref (cdr a-entry)
-	  (style-to-index style nil))))
+	  (style-to-index style nil))
+    (assert nil (n) "~D does not have an apropriate char" n)))
 
 (defun get-minus-sign (style)
   (aref +minus-sign+
@@ -54,11 +68,17 @@
     (assert (= (length s) 1))
     (char s 0)))
 
+(defun get-infinity (style)
+  (aref +infinite+ (style-to-index style t)))
+
+(defun get-nan (style)
+  (aref +nan+ (style-to-index style t)))
+
 
 ;;; Writers
 
 (defun translate-char (char style)
-  (case char
+  (ecase char
     (#\0 (get-digit 0 style))
     (#\1 (get-digit 1 style))
     (#\2 (get-digit 2 style))
@@ -68,13 +88,7 @@
     (#\6 (get-digit 6 style))
     (#\7 (get-digit 7 style))
     (#\8 (get-digit 8 style))
-    (#\9 (get-digit 9 style))
-    (#\- (get-minus-sign style))
-    (#\/ (get-parts-of style))
-    ((#\d #\e #\f #\l #\s)
-     (error 'exponent-marker-found-condition))
-    (otherwise
-     (error 'bad-format-float-error))))
+    (#\9 (get-digit 9 style))))
 
 
 (defun make-digits4-string (digits4 style)
@@ -107,62 +121,51 @@
 
 (defun print-jp-integer (stream object style)
   (declare (type (integer 0) object))
-  (assert (not (eq style :positional)))
-  (loop with strs = nil
-     for power from 0 by 4
-     for (rest digits4) = (multiple-value-list (floor object 10000))
-     then (multiple-value-list (floor rest 10000))
-     as digits4-str = (make-digits4-string digits4 style)
-     as power-str = (get-power power style)
-     when (plusp (length digits4-str))
-     do (when power-str
-	  (push power-str strs))
-       (push digits4-str strs)
-     while (> rest 0)
-     finally
-       (mapc #'(lambda (s) (write-string s stream)) strs)))
+  (case style
+    (:positional
+     (loop with lispstr = (format nil "~D" object)
+	for c across lispstr
+	do (write-string (translate-char c style) stream)))
+    (otherwise
+     (loop with strs = nil
+	for power from 0 by 4
+	for (rest digits4) = (multiple-value-list (floor object 10000))
+	then (multiple-value-list (floor rest 10000))
+	as digits4-str = (make-digits4-string digits4 style)
+	as power-str = (if (plusp power)
+			   (get-power power style) nil)
+	when (plusp (length digits4-str))
+	do (when power-str
+	     (push power-str strs))
+	and do (push digits4-str strs)
+	while (> rest 0)
+	finally (mapc #'(lambda (s) (write-string s stream)) strs)))))
 
 (defun print-fractional-part (stream object style digits-after-dot scale)
-  (declare (type float object))
-  (assert (not (eq style :positional)))
-  ;; TODO: treat infinities
-  (loop with frac-part-l-str = (format nil "~,v,vF" digits-after-dot scale object)
-     for i from (1+ (position #\. frac-part-l-str)) below (length frac-part-l-str)
-     as c = (char frac-part-l-str i)
-     for power downfrom -1
-     when (char/= #\0 c)
-     do (write-string (translate-char c style) stream)
-       (write-string (get-power power style) stream)))
-
-
-(defun print-positional-jp-numeral (stream object &optional digits-after-dot scale decimal-mark)
-  (unless digits-after-dot
-    (setf digits-after-dot nil))
-  (unless scale
-    (setf scale 0))
-  (unless decimal-mark
-    (setf decimal-mark (get-radix-point-char :positional)))
-  (flet ((recurse (object)
-	   (print-positional-jp-numeral
-	    stream object digits-after-dot scale decimal-mark)))
-    (ctypecase object
-      (integer
-       (loop with lispstr = (format nil "~D" object)
-	  for c across lispstr
-	  do (write-string (translate-char c :positional)
-			   stream)))
-      (ratio
-       (recurse (numerator object))
-       (write-string (get-parts-of :positional) stream)
-       (recurse (denominator object)))
-      (float
-       (recurse (truncate object))
-       (write-char decimal-mark stream)
-       ;; TODO: treat infinities and the exponent marker
-       (loop with frac-part-l-str = (format nil "~,v,vF" digits-after-dot scale object)
-	  for i from (1+ (position #\. frac-part-l-str)) below (length frac-part-l-str)
-	  as c = (char frac-part-l-str i)
-	  do (write-string (translate-char c :positional) stream))))))
+  ;; (declare (type float object))
+  (let* ((trim-zero? (if digits-after-dot t nil))
+	 (digits-after-dot (or digits-after-dot
+			       (- +power-min+)))
+	 (scale (or scale 0))
+	 (frac-part-l-str (format nil "~,v,vF" digits-after-dot scale object)))
+    (when trim-zero?
+      (setf frac-part-l-str (string-right-trim '(#\0) frac-part-l-str)))
+    (loop for i from (1+ (position #\. frac-part-l-str)) below (length frac-part-l-str)
+       as c = (aref frac-part-l-str i)
+       for power downfrom -1
+       unless (digit-char-p c)
+       do (case c
+	    ((#\- #\/)
+	     (assert nil (c) "~C should be treated around this function." c))
+	    ((#\d #\e #\f #\l #\s)
+	     (error 'exponent-marker-found-error))
+	    (otherwise
+	     (error 'bad-format-float-error)))
+       if (eq style :positional)
+       do (write-string (translate-char c style) stream)
+       else if (char/= #\0 c)
+       do (write-string (translate-char c style) stream)
+       (write-string (get-power power style) stream))))
 
 (defun pprint-jp-numeral (stream object &optional colon-p at-sign-p
 			  digits-after-dot scale decimal-mark
@@ -174,35 +177,59 @@
     (error "~A is not an expected type for jp-numeral" (type-of object)))
   (unless (= *print-base* 10)
     (error "*print-base* must be 10 for jp-numeral"))
-  (when (eq style :positional)
-    (return-from pprint-jp-numeral
-      (print-positional-jp-numeral stream object digits-after-dot scale decimal-mark)))
-  (unless digits-after-dot
-    (setf digits-after-dot (- +power-min+)))
-  (unless scale
-    (setf scale 0))
-  (unless decimal-mark
-    (setf decimal-mark (get-radix-point-char style)))
-  (let ((buf (make-array '(1) :element-type 'character :fill-pointer 0 :adjustable t)))
-    (with-output-to-string (buf-stream buf)
-      (when (minusp object)
-	(write-string (get-minus-sign style) buf-stream))
-      (ctypecase object
-	(integer
-	 ;; TODO: catch overflow-error, and use alternative string.
-	 (print-jp-integer buf-stream (abs object) style))
-	(ratio
-	 (print-jp-integer buf-stream (denominator object) style)
-	 (write-string (get-parts-of style) buf-stream)
-	 (print-jp-integer buf-stream (abs (numerator object)) style))
-	(float
-	 (print-jp-integer buf-stream (abs (truncate object)) style)
-	 (when (plusp (length buf))
-	   (write-char decimal-mark buf-stream))
-	 (print-fractional-part buf-stream object style digits-after-dot scale)))
-      (unless (plusp (length buf))
-	(write-string buf-stream (get-digit 0 style))))
-    (write-string buf stream)))
+  (prog ((buf (make-array '(1) :element-type 'character :fill-pointer 0 :adjustable t)))
+   try-again
+   (handler-case
+       (with-output-to-string (buf-stream buf)
+	 (when (minusp object)
+	   (write-string (get-minus-sign style) buf-stream))
+	 (ctypecase object
+	   (integer
+	    (print-jp-integer buf-stream (abs object) style))
+	   (ratio
+	    (case style
+	      (:positional
+	       (print-jp-integer buf-stream (abs (numerator object)) style)
+	       (write-string (get-parts-of style) buf-stream)
+	       (print-jp-integer buf-stream (denominator object) style))
+	      (t
+	       (print-jp-integer buf-stream (denominator object) style)
+	       (write-string (get-parts-of style) buf-stream)
+	       (print-jp-integer buf-stream (abs (numerator object)) style))))
+	   (float
+	    (let ((int-part
+		   (handler-case (truncate object)
+		     (error ()
+		       (error 'bad-format-float-error)))))
+	      (print-jp-integer buf-stream (abs int-part) style))
+	    (when (plusp (length buf))
+	      (write-char (or decimal-mark (get-radix-point-char style))
+			  buf-stream))
+	    (print-fractional-part buf-stream object style digits-after-dot scale)))
+	 (unless (plusp (length buf))
+	   (write-string buf-stream (get-digit 0 style))))
+     (no-power-char-error ()
+       ;; Decimal chars are exhausted. Use positional.
+       (assert (not (eq style :positional)))
+       (setf style :positional)
+       (setf (fill-pointer buf) 0)
+       (go try-again))
+     (bad-format-float-error ()
+       ;; Infinity or NaN.
+       ;; TODO: this routine is not good. Should use right floating-point handlings.
+       (setf (fill-pointer buf) 0)
+       (let ((pos-inf? (positive-infinite-p object))
+	     (neg-inf? (negative-infinite-p object)))
+	 (cond ((and pos-inf? (not neg-inf?))
+		(write-string (get-infinity style)))
+	       ((and (not pos-inf?) neg-inf?)
+		(write-string (get-minus-sign style))
+		(write-string (get-infinity style)))
+	       (t
+		(write-string (get-nan style)))))
+       (go final-output)))
+   final-output
+   (write-string buf stream)))
 
 
 ;;; cl:format interface
