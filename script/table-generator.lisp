@@ -157,6 +157,14 @@
     #("非数" nil nil nil)
   :test 'equalp)
 
+(define-constant +sen+
+    "銭"
+  :test 'equalp)
+
+(define-constant +wari+
+    "割"
+  :test 'equalp)
+
 
 (defun generate-file (output-file &optional (*package* *package*))
   (with-open-file (stream output-file
@@ -217,4 +225,10 @@
 	(terpri stream)
 	(format stream "~S~%"
 		(make-str-array-form '+nan+))
+	(terpri stream)
+	(format stream "~S~%"
+		(make-const-form '+sen+ (to-octets-printer +sen+)))
+	(terpri stream)
+	(format stream "~S~%"
+		(make-const-form '+wari+ (to-octets-printer +wari+)))
 	))))

@@ -471,3 +471,17 @@
                    #1# #1# #1#)
                  :TEST 'EQUALP :DOCUMENTATION
                  "A vector of (<normal> <formal> <old> <positional>")
+
+(DEFINE-CONSTANT +SEN+
+                 #.(BABEL:OCTETS-TO-STRING
+                    (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(233 138 173)
+                                :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
+                    :ENCODING :UTF-8)
+                 :TEST 'EQUALP :DOCUMENTATION NIL)
+
+(DEFINE-CONSTANT +WARI+
+                 #.(BABEL:OCTETS-TO-STRING
+                    (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(229 137 178)
+                                :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
+                    :ENCODING :UTF-8)
+                 :TEST 'EQUALP :DOCUMENTATION NIL)

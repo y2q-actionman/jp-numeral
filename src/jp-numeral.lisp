@@ -21,11 +21,6 @@
 (define-condition no-power-char-error (error)
   ())
 
-(define-condition exponent-marker-found-error (error)
-  ()
-  ;; TODO: take the argument into the slot.
-  (:report "Exponent markers are found. This is an internal BUG of jp-numeral."))
-
 (define-condition bad-format-float-error (error)
   ())
 
@@ -158,7 +153,8 @@
 	    ((#\- #\/)
 	     (assert nil (c) "~C should be treated around this function." c))
 	    ((#\d #\e #\f #\l #\s)
-	     (error 'exponent-marker-found-error))
+	     (assert nil (c)
+		     "Exponent marker '~C' is found. This is an internal BUG of jp-numeral." c))
 	    (otherwise
 	     (error 'bad-format-float-error)))
        if (eq style :positional)
@@ -234,6 +230,17 @@
 
 ;;; cl:format interface
 
-;; TODO: rewrite with appropriate args.
-(setf (fdefinition 'j)
-      #'pprint-jp-numeral)
+(defun J (stream object &optional colon-p at-sign-p
+			  digits-after-dot scale decimal-mark)
+  (pprint-jp-numeral stream object colon-p at-sign-p
+		     digits-after-dot scale decimal-mark))
+  
+(defun wari (stream object &optional colon-p at-sign-p
+			     digits-after-dot)
+  (assert (= (length +wari+) 1))
+  (pprint-jp-numeral stream object colon-p at-sign-p
+		     digits-after-dot 1 (char +wari+ 0)))
+
+(defun W (stream object &optional colon-p at-sign-p
+			  digits-after-dot)
+  (wari stream object colon-p at-sign-p digits-after-dot))
