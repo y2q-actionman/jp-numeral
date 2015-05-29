@@ -207,7 +207,7 @@
 			  buf-stream))
 	    (print-fractional-part buf-stream object style digits-after-dot scale)))
 	 (unless (plusp (length buf))
-	   (write-string buf-stream (get-digit 0 style))))
+	   (write-string (get-digit 0 style) buf-stream)))
      (no-power-char-error ()
        ;; Decimal chars are exhausted. Use positional.
        (assert (not (eq style :positional)))

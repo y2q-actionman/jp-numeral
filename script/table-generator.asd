@@ -9,7 +9,7 @@
   :description "A script for making jp-numeral."
   :license "MIT"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
-  :depends-on (:babel)
+  :depends-on (:alexandria :babel)
   :components
   ((:file "table-generator")))
 

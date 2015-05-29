@@ -4,6 +4,8 @@
 
 (defpackage jp-numeral.table-generator
   (:use :cl)
+  (:import-from :alexandria
+		:define-constant)
   (:export #:generate-file))
 
 (in-package :jp-numeral.table-generator)
@@ -27,17 +29,18 @@
       nil))
 
 
-(defconstant +digits+
-  #(("〇" nil "零")
-    ("一" "壱" "壹")
-    ("二" "弐" "貳")
-    ("三" "参" "參")
-    ("四" nil "肆")
-    ("五" nil "伍")
-    ("六" nil "陸")
-    ("七" nil "柒")
-    ("八" nil "捌")
-    ("九" nil "玖")))
+(define-constant +digits+
+    #(("〇" nil "零")
+      ("一" "壱" "壹")
+      ("二" "弐" "貳")
+      ("三" "参" "參")
+      ("四" nil "肆")
+      ("五" nil "伍")
+      ("六" nil "陸")
+      ("七" nil "柒")
+      ("八" nil "捌")
+      ("九" nil "玖"))
+  :test 'equalp)
 
 (defun make-digits-load-form ()
   (loop with buf = (make-array (array-dimensions +digits+)
@@ -50,51 +53,52 @@
      finally (return buf)))
 
 
-(defconstant +power-alist+
-  '((1 . ("十" "拾" nil))
-    (2 . ("百" nil "佰"))
-    (3 . ("千" nil "仟"))
-    ;; myriads
-    (4 . ("万" nil "萬"))
-    (8 . "億")
-    (12 . "兆")
-    (16 . "京")
-    (20 . "垓")
-    (24 . (#(240 165 157 177) nil "秭")) ; U+25771 may be out of Lisp string..
-    ;; BUG: babel on ACL makes #(237 161 149 237 189 177) from U+25771 !!
-    (28 . "穣")
-    (32 . "溝")
-    (36 . "澗")
-    (40 . "正")
-    (44 . "載")
-    (48 . "極")
-    (52 . "恒河沙")
-    (56 . "阿僧祇")
-    (60 . "那由他")
-    (64 . "不可思議")
-    (68 . "無量大数")
-    ;; fractions
-    (-1 . "分")
-    (-2 . ("厘" nil "釐"))
-    (-3 . ("毛" nil "毫"))
-    (-4 . ("糸" nil "絲"))
-    (-5 . "忽")
-    (-6 . "微")
-    (-7 . "繊")
-    (-8 . "沙")
-    (-9 . "塵")
-    (-10 . "埃")
-    (-11 . "渺")
-    (-12 . "漠")
-    (-13 . "模糊")
-    (-14 . "逡巡")
-    (-15 . "須臾")
-    (-16 . "瞬息")
-    (-17 . "弾指")
-    (-18 . "刹那")
-    (-19 . "六徳")
-    (-20 . "虚空")
-    (-21 . "清浄")))
+(define-constant +power-alist+
+    '((1 . ("十" "拾" nil))
+      (2 . ("百" nil "佰"))
+      (3 . ("千" nil "仟"))
+      ;; myriads
+      (4 . ("万" nil "萬"))
+      (8 . "億")
+      (12 . "兆")
+      (16 . "京")
+      (20 . "垓")
+      (24 . (#(240 165 157 177) nil "秭")) ; U+25771 may be out of Lisp string..
+      ;; BUG: babel on ACL makes #(237 161 149 237 189 177) from U+25771 !!
+      (28 . "穣")
+      (32 . "溝")
+      (36 . "澗")
+      (40 . "正")
+      (44 . "載")
+      (48 . "極")
+      (52 . "恒河沙")
+      (56 . "阿僧祇")
+      (60 . "那由他")
+      (64 . "不可思議")
+      (68 . "無量大数")
+      ;; fractions
+      (-1 . "分")
+      (-2 . ("厘" nil "釐"))
+      (-3 . ("毛" nil "毫"))
+      (-4 . ("糸" nil "絲"))
+      (-5 . "忽")
+      (-6 . "微")
+      (-7 . "繊")
+      (-8 . "沙")
+      (-9 . "塵")
+      (-10 . "埃")
+      (-11 . "渺")
+      (-12 . "漠")
+      (-13 . "模糊")
+      (-14 . "逡巡")
+      (-15 . "須臾")
+      (-16 . "瞬息")
+      (-17 . "弾指")
+      (-18 . "刹那")
+      (-19 . "六徳")
+      (-20 . "虚空")
+      (-21 . "清浄"))
+  :test 'equalp)
 
 (defun make-power-alist-load-form ()
   (loop for (i . data) in +power-alist+
@@ -116,11 +120,11 @@
 	    (cons i (vector normal-octets formal-octets old-octets))))))))
 
 
-(defconstant +power-max+
-  (apply #'max (mapcar #'car +power-alist+)))
+(define-constant +power-max+
+    (apply #'max (mapcar #'car +power-alist+)))
 
-(defconstant +power-min+
-  (apply #'min (mapcar #'car +power-alist+)))
+(define-constant +power-min+
+    (apply #'min (mapcar #'car +power-alist+)))
 
 
 (defun make-string-array-load-form (arr)
@@ -133,20 +137,25 @@
      finally (return buf)))
 
 
-(defconstant +minus-sign+
-  #("マイナス" "負の" "負之" "−"))
+(define-constant +minus-sign+
+    #("マイナス" "負の" "負之" "−")
+  :test 'equalp)
 
-(defconstant +fraction-parts-of+
-  #("分の" nil "分之" "／"))
+(define-constant +fraction-parts-of+
+    #("分の" nil "分之" "／")
+  :test 'equalp)
 
-(defconstant +radix-point+
-  #("・" nil nil nil))
+(define-constant +radix-point+
+    #("・" nil nil nil)
+  :test 'equalp)
 
-(defconstant +infinite+
-  #("無限大" nil nil nil))
+(define-constant +infinite+
+    #("無限大" nil nil nil)
+  :test 'equalp)
 
-(defconstant +nan+
-  #("非数" nil nil nil))
+(define-constant +nan+
+    #("非数" nil nil nil)
+  :test 'equalp)
 
 
 (defun generate-file (output-file &optional (*package* *package*))
@@ -156,7 +165,8 @@
     (labels ((gen-output-symbol (sym)
 	       (intern (symbol-name sym) *package*))
 	     (make-const-form (sym val &optional docstring)
-		`(defconstant ,(gen-output-symbol sym) ,val ,docstring))
+	       `(define-constant ,(gen-output-symbol sym) ,val
+		  :test 'equalp :documentation ,docstring))
 	     (make-str-array-form (sym)
 	       (make-const-form sym (make-string-array-load-form (symbol-value sym))
 		   "A vector of (<normal> <formal> <old> <positional>")))
@@ -176,14 +186,16 @@
 		(make-const-form '+table-positional-index+ 3))
 	(terpri stream)
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+digits+)
-		   ',(make-digits-load-form)
-		   "A vector of (<normal> <formal> <old>)"))
+		`(define-constant ,(gen-output-symbol '+digits+)
+		     ',(make-digits-load-form)
+		   :test 'equalp
+		   :documentation "A vector of (<normal> <formal> <old>)"))
 	(terpri stream)
 	(format stream "~S~%"
-		`(defconstant ,(gen-output-symbol '+power-alist+)
-		   ',(make-power-alist-load-form)
-		   "An alist of (<power> . (<normal> <formal> <old>))"))
+		`(define-constant ,(gen-output-symbol '+power-alist+)
+		     ',(make-power-alist-load-form)
+		   :test 'equalp
+		   :documentation "An alist of (<power> . (<normal> <formal> <old>))"))
 	(terpri stream)
 	(format stream "~S~%"
 		(make-const-form '+power-max+ +power-max+))
