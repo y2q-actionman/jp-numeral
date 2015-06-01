@@ -169,6 +169,11 @@
   (let* ((ratio (if digits-after-dot
 		    (rational object)
 		    (rationalize object)))
+	 ;; -- support 1000000000000000.1d0
+	 (fp-error (multiple-value-bind (_scaled expon _sign)
+		       (integer-decode-float object)
+		     (declare (ignore _scaled _sign))
+		     (expt (float-radix object) expon)))
 	 (scaled-ratio (* ratio (expt 10 (or scale 0))))
 	 (print-power-min (if digits-after-dot (- digits-after-dot)
 			      +power-min+)))
@@ -198,7 +203,8 @@
 	       (when (/= 0 current-digit)
 		 (write-string (get-digit current-digit style) stream)
 		 (write-string (get-power power style) stream))))
-	 while (< printed frac-part)))))
+	 while (and (< printed frac-part)
+		    (< fp-error current-scale))))))
 			 
 
 (defun pprint-jp-numeral (stream object &optional colon-p at-sign-p
