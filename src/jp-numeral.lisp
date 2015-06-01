@@ -163,6 +163,44 @@
        do (write-string (translate-char c style) stream)
        (write-string (get-power power style) stream))))
 
+;; This does not use Lisp printer.
+#+ignore
+(defun print-fractional-2 (stream object style digits-after-dot scale)
+  (let* ((ratio (if digits-after-dot
+		    (rational object)
+		    (rationalize object)))
+	 (scaled-ratio (* ratio (expt 10 (or scale 0))))
+	 (print-power-min (if digits-after-dot (- digits-after-dot)
+			      +power-min+)))
+    (multiple-value-bind (int-part frac-part)
+	;; TODO: treat signals 
+	(floor scaled-ratio)
+      (print-jp-integer stream int-part style)
+      (when (plusp int-part)
+	;; TODO: use decimal-mark arg.
+	(write-char (get-radix-point-char style) stream))
+      (loop with printed = 0
+	 for power downfrom -1 to print-power-min
+	 for current-scale = 1/10 then (/ current-scale 10) ; (expt 10 power)
+	 as current-digit = 
+	 (loop for i from 0 to 9
+	    for sum = printed then next-sum
+	    for next-sum from (+ printed current-scale) by current-scale
+	    until (and (<= sum frac-part)
+		       (< frac-part next-sum))
+	    finally
+	    (setf printed sum)
+	    (return i))
+	 do (case style
+	      (:positional
+	       (write-string (get-digit current-digit style) stream))
+	      (otherwise
+	       (when (/= 0 current-digit)
+		 (write-string (get-digit current-digit style) stream)
+		 (write-string (get-power power style) stream))))
+	 while (< printed frac-part)))))
+			 
+
 (defun pprint-jp-numeral (stream object &optional colon-p at-sign-p
 			  digits-after-dot scale decimal-mark
 			  &aux (style (cond ((and colon-p at-sign-p) :positional)
