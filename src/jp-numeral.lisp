@@ -71,7 +71,6 @@
 	    ;; FIXME: trim-zero doesn't work for complex.
 	    (complex (format nil "~,v,vF~,v,v@Fi" digits-after-dot scale (realpart object)
 			     digits-after-dot scale (imagpart object))))))
-    (pprint lispstr)
     (when trim-zero?
       (setf lispstr (string-right-trim '(#\0) lispstr)))
     (loop for c across lispstr
