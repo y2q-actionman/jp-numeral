@@ -45,11 +45,15 @@
   (aref +radix-point+
 	(style-to-index style t)))
 
-(defun get-infinity (style)		; Unused
-  (aref +infinite+ (style-to-index style t)))
+(defun get-yen (style)
+  (aref +yen+ (style-to-index style nil)))
 
-(defun get-nan (style)			; Unused
-  (aref +nan+ (style-to-index style t)))
+(defun get-sen (style)
+  (aref +sen+ (style-to-index style nil)))
+
+(defun get-wari (style)
+  (declare (ignore style))
+  +wari+)
 
 
 ;;; Writers
@@ -149,13 +153,14 @@
 	   (print-power-min (if digits-after-dot (- digits-after-dot)
 				+power-min+)))
       (multiple-value-bind (int-part frac-part)
-	  (floor scaled-ratio)
+	  (truncate scaled-ratio)
 	(print-jp-integer stream int-part style)
 	(when (plusp int-part)
 	  (write-string radix-point-str stream))
 	(loop with printed = 0
 	   for power downfrom -1 to print-power-min
 	   for current-scale = 1/10 then (/ current-scale 10) ; (expt 10 power)
+	   while (< fp-error current-scale)
 	   as current-digit = 
 	   (loop for i from 0 to 9
 	      for sum = printed then next-sum
@@ -168,23 +173,26 @@
 	   do (when (/= 0 current-digit)
 		(write-string (get-digit current-digit style) stream)
 		(write-string (get-power power style) stream))
-	   while (and (< printed frac-part)
-		      (< fp-error current-scale)))))))
-			 
+	   while (< printed frac-part))))))
+
+
+(defun flag-to-style (colon-p at-sign-p)
+  (cond ((and colon-p at-sign-p) :positional)
+	(colon-p :formal)
+	(at-sign-p :old)
+	(t :normal)))
 
 (defun pprint-jp-numeral (stream object &optional colon-p at-sign-p
 			  digits-after-dot scale radix-point-char
-			  &aux (style (cond ((and colon-p at-sign-p) :positional)
-					    (colon-p :formal)
-					    (at-sign-p :old)
-					    (t :normal))))
+			  &aux (style (flag-to-style colon-p at-sign-p)))
   (unless (numberp object)
     (error "~A is not an expected type for jp-numeral" (type-of object)))
   (prog ((*print-base* 10) ; *print-base* must be 10 for jp-numeral
 	 (scale (or scale 0))
-	 (radix-point-str (if radix-point-char
-			      (string radix-point-char)
-			      (get-radix-point style)))
+	 (radix-point-str (etypecase radix-point-char
+			    (string radix-point-char)
+			    (character (string radix-point-char))
+			    (null (get-radix-point style))))
 	 (buf (make-array '(1) :element-type 'character :fill-pointer 0 :adjustable t)))
    try-again
    (handler-case
@@ -218,10 +226,12 @@
      (bad-format-float-error ()
        ;; Infinity or NaN.
        ;; TODO: Use right floating-point handlings.
+       (setf style nil)
        (setf (fill-pointer buf) 0)
        (format buf "~A" object)))
    ;; Final output.
-   (write-string buf stream)))
+   (write-string buf stream))
+  style) ; If this is not expected one by the caller, means alternative methods used.
 
 
 ;;; cl:format interface
@@ -240,3 +250,22 @@
 (defun W (stream object &optional colon-p at-sign-p
 			  digits-after-dot)
   (wari stream object colon-p at-sign-p digits-after-dot))
+
+(defun sen (stream object &optional colon-p at-sign-p digits-after-dot)
+  (unless digits-after-dot
+    (setf digits-after-dot 2))
+  (unless (<= 2 digits-after-dot 3)
+    (error "Sen: digits should be 2 or 3"))
+  (let* ((style (flag-to-style colon-p at-sign-p))
+	 (yen-str (get-yen style))
+	 (sen-str (get-sen style))
+	 (rin-str (get-power -2 style)))
+    (when (eq (pprint-jp-numeral stream object colon-p at-sign-p
+				 0 0 yen-str)
+	      style)
+      (assert (>= digits-after-dot 2))
+      (pprint-jp-numeral stream (rem (* 100 object) 100) colon-p at-sign-p
+			 0 0 sen-str)
+      (when (>= digits-after-dot 3)
+	(pprint-jp-numeral stream (rem (* 1000 object) 10) colon-p at-sign-p
+			   0 0 rin-str)))))

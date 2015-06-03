@@ -149,16 +149,12 @@
     #("・" nil nil nil)
   :test 'equalp)
 
-(define-constant +infinite+
-    #("無限大" nil nil nil)
-  :test 'equalp)
-
-(define-constant +nan+
-    #("非数" nil nil nil)
-  :test 'equalp)
-
 (define-constant +sen+
-    "銭"
+    #("銭" nil "錢")
+  :test 'equalp)
+
+(define-constant +yen+
+    #("円" nil "圓")
   :test 'equalp)
 
 (define-constant +wari+
@@ -221,13 +217,10 @@
 		(make-str-array-form '+radix-point+))
 	(terpri stream)
 	(format stream "~S~%"
-		(make-str-array-form '+infinite+))
+		(make-str-array-form '+yen+))
 	(terpri stream)
 	(format stream "~S~%"
-		(make-str-array-form '+nan+))
-	(terpri stream)
-	(format stream "~S~%"
-		(make-const-form '+sen+ (to-octets-printer +sen+)))
+		(make-str-array-form '+sen+))
 	(terpri stream)
 	(format stream "~S~%"
 		(make-const-form '+wari+ (to-octets-printer +wari+)))

@@ -452,36 +452,40 @@
                  :TEST 'EQUALP :DOCUMENTATION
                  "A vector of (<normal> <formal> <old> <positional>")
 
-(DEFINE-CONSTANT +INFINITE+
+(DEFINE-CONSTANT +YEN+
                  #(#1=#.(BABEL:OCTETS-TO-STRING
-                         (MAKE-ARRAY '(9) :INITIAL-CONTENTS
-                                     '(231 132 161 233 153 144 229 164 167)
-                                     :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
-                         :ENCODING :UTF-8)
-                   #1# #1# #1#)
-                 :TEST 'EQUALP :DOCUMENTATION
-                 "A vector of (<normal> <formal> <old> <positional>")
-
-(DEFINE-CONSTANT +NAN+
-                 #(#1=#.(BABEL:OCTETS-TO-STRING
-                         (MAKE-ARRAY '(6) :INITIAL-CONTENTS
-                                     '(233 157 158 230 149 176) :ELEMENT-TYPE
-                                     '(UNSIGNED-BYTE 8))
-                         :ENCODING :UTF-8)
-                   #1# #1# #1#)
+                           (MAKE-ARRAY '(3)
+                             :INITIAL-CONTENTS '(229 134 134)
+                             . #2=(:ELEMENT-TYPE '(UNSIGNED-BYTE 8)))
+                          . #3=(:ENCODING :UTF-8))
+                   #1#
+                   #.(BABEL:OCTETS-TO-STRING
+                        (MAKE-ARRAY '(3)
+                          :INITIAL-CONTENTS '(229 156 147)
+                          . #2#)
+                       . #3#))
                  :TEST 'EQUALP :DOCUMENTATION
                  "A vector of (<normal> <formal> <old> <positional>")
 
 (DEFINE-CONSTANT +SEN+
-                 #.(BABEL:OCTETS-TO-STRING
-                    (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(233 138 173)
-                                :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
-                    :ENCODING :UTF-8)
-                 :TEST 'EQUALP :DOCUMENTATION NIL)
+                 #(#1=#.(BABEL:OCTETS-TO-STRING
+                           (MAKE-ARRAY '(3)
+                             :INITIAL-CONTENTS '(233 138 173)
+                             . #2=(:ELEMENT-TYPE '(UNSIGNED-BYTE 8)))
+                          . #3=(:ENCODING :UTF-8))
+                   #1#
+                   #.(BABEL:OCTETS-TO-STRING
+                        (MAKE-ARRAY '(3)
+                          :INITIAL-CONTENTS '(233 140 162)
+                          . #2#)
+                       . #3#))
+                 :TEST 'EQUALP :DOCUMENTATION
+                 "A vector of (<normal> <formal> <old> <positional>")
 
 (DEFINE-CONSTANT +WARI+
                  #.(BABEL:OCTETS-TO-STRING
-                    (MAKE-ARRAY '(3) :INITIAL-CONTENTS '(229 137 178)
-                                :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
-                    :ENCODING :UTF-8)
+                      (MAKE-ARRAY '(3)
+                        :INITIAL-CONTENTS '(229 137 178)
+                        :ELEMENT-TYPE '(UNSIGNED-BYTE 8))
+                     :ENCODING :UTF-8)
                  :TEST 'EQUALP :DOCUMENTATION NIL)
