@@ -67,7 +67,11 @@
 	  (ctypecase object
 	    (integer (format nil "~D" object))
 	    (ratio (format nil "~D/~D" (numerator object) (denominator object)))
-	    (float (format nil "~,v,vF" digits-after-dot scale object)))))
+	    (float (format nil "~,v,vF" digits-after-dot scale object))
+	    ;; FIXME: trim-zero doesn't work for complex.
+	    (complex (format nil "~,v,vF~,v,v@Fi" digits-after-dot scale (realpart object)
+			     digits-after-dot scale (imagpart object))))))
+    (pprint lispstr)
     (when trim-zero?
       (setf lispstr (string-right-trim '(#\0) lispstr)))
     (loop for c across lispstr
@@ -89,6 +93,11 @@
 	 ((#\d #\e #\f #\l #\s)
 	  (assert nil (c)
 		  "Exponent marker '~C' is found. This is an internal BUG of jp-numeral." c))
+	 ;; for complex
+	 ((#\+ #\i)
+	  (if (complexp object)
+	      (string c)
+	      (error 'bad-format-float-error)))
 	 (otherwise
 	  (error 'bad-format-float-error)))
        do (write-string jp-str stream))))
@@ -201,20 +210,30 @@
 	   (:positional
 	    (print-positional stream object style digits-after-dot scale radix-point-str))
 	   (otherwise
-	    (when (minusp object)
-	      (write-string (get-minus-sign style) buf-stream))
-	    (ctypecase object
+	    (typecase object
 	      (integer
+	       (when (minusp object)	; TODO: cleanup
+		 (write-string (get-minus-sign style) buf-stream))
 	       (print-jp-integer buf-stream (abs (* object (expt 10 scale))) style)
 	       (when radix-point-char
 		 (write-string radix-point-str buf-stream)))
 	      (ratio
+	       (when (minusp object)	; TODO: cleanup
+		 (write-string (get-minus-sign style) buf-stream))
 	       (let ((object (* object (expt 10 scale))))
 		 (print-jp-integer buf-stream (denominator object) style)
 		 (write-string (get-parts-of style) buf-stream)
 		 (print-jp-integer buf-stream (abs (numerator object)) style)))
 	      (float
-	       (print-fraction buf-stream (abs object) style digits-after-dot scale radix-point-str)))
+	       (when (minusp object)	; TODO: cleanup
+		 (write-string (get-minus-sign style) buf-stream))
+	       (print-fraction buf-stream (abs object) style digits-after-dot scale radix-point-str))
+	      (t			; complex etc.
+	       ;; TODO: merge this code with no-power-char-error
+	       (assert (not (eq style :positional)))
+	       (setf style :positional)
+	       (setf (fill-pointer buf) 0)
+	       (go try-again)))
 	    (unless (plusp (length buf))
 	      (write-string (get-digit 0 style) buf-stream)))))
      (no-power-char-error ()
