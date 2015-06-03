@@ -77,6 +77,8 @@ CL-USER> (format nil "~:@/jp-numeral:pprint-jp-numeral/" 12345687890)
 - ~~桁の上限や下限を越えた時の処置~~
 - ~~NAN と 無限値 -- 規定なし~~
 - ~~"銭" と "割"~~
-- fix 'XXXXXXXX.' at printing floats.
 - ~~bug at scale parameter~~
+- Writing tests.
+- fix 'XXXXXXXX.' at printing floats.
 - complex
+- ratio at "銭"

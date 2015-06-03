@@ -214,7 +214,7 @@
 		 (write-string (get-parts-of style) buf-stream)
 		 (print-jp-integer buf-stream (abs (numerator object)) style)))
 	      (float
-	       (print-fraction buf-stream object style digits-after-dot scale radix-point-str)))
+	       (print-fraction buf-stream (abs object) style digits-after-dot scale radix-point-str)))
 	    (unless (plusp (length buf))
 	      (write-string (get-digit 0 style) buf-stream)))))
      (no-power-char-error ()
@@ -251,21 +251,28 @@
 			  digits-after-dot)
   (wari stream object colon-p at-sign-p digits-after-dot))
 
-(defun sen (stream object &optional colon-p at-sign-p digits-after-dot)
+(defun yen (stream object &optional colon-p at-sign-p digits-after-dot)
   (unless digits-after-dot
     (setf digits-after-dot 2))
   (unless (<= 2 digits-after-dot 3)
     (error "Sen: digits should be 2 or 3"))
   (let* ((style (flag-to-style colon-p at-sign-p))
-	 (yen-str (get-yen style))
-	 (sen-str (get-sen style))
-	 (rin-str (get-power -2 style)))
+	 (yen-str (get-yen style)))
     (when (eq (pprint-jp-numeral stream object colon-p at-sign-p
 				 0 0 yen-str)
 	      style)
-      (assert (>= digits-after-dot 2))
-      (pprint-jp-numeral stream (rem (* 100 object) 100) colon-p at-sign-p
-			 0 0 sen-str)
+      (when (minusp object)
+	(setf object (- object)))
+      (when (>= digits-after-dot 2)
+	(let ((sen-num (rem (* 100 object) 100)))
+	  (when (plusp sen-num)
+	    (pprint-jp-numeral stream sen-num colon-p at-sign-p 0 0 "")
+	    (write-string (get-sen style) stream))))
       (when (>= digits-after-dot 3)
-	(pprint-jp-numeral stream (rem (* 1000 object) 10) colon-p at-sign-p
-			   0 0 rin-str)))))
+	(let ((rin-num (rem (* 1000 object) 10)))
+	  (when (plusp rin-num)
+	    (pprint-jp-numeral stream rin-num colon-p at-sign-p 0 0 "")
+	    (write-string (get-power -2 style) stream)))))))
+
+(defun Y (stream object &optional colon-p at-sign-p digits-after-dot)
+  (yen stream object colon-p at-sign-p digits-after-dot))
