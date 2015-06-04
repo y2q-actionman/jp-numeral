@@ -236,6 +236,11 @@
 
 ;;; cl:format interface
 
+(defun JP (stream object &optional colon-p at-sign-p
+			  digits-after-dot scale radix-point-char)
+  (pprint-jp-numeral stream object colon-p at-sign-p
+		     digits-after-dot scale radix-point-char))
+  
 (defun J (stream object &optional colon-p at-sign-p
 			  digits-after-dot scale radix-point-char)
   (pprint-jp-numeral stream object colon-p at-sign-p
