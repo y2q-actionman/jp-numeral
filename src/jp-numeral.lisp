@@ -119,9 +119,8 @@
 	      (unless (zerop d0)
 		(put-n (get-digit d0 style))))))))))
 
-(defun print-jp-integer (stream object style scale)
+(defun print-jp-integer (stream object style)
   (declare (type integer object))
-  (setf object (* object (expt 10 scale)))
   (loop with strs = nil
      for power from 0 by 4
      for (rest digits4) = (multiple-value-list (floor object 10000))
@@ -134,22 +133,29 @@
      while (plusp rest)
      finally (mapc #'(lambda (s) (write-string s stream)) strs)))
 
-(defun print-fractional-part (stream object style digits-after-dot scale)
+(defun make-fractional-string (object style digits-after-dot scale)
   (let* ((trim-zero? (not digits-after-dot))
 	 (digits-after-dot (or digits-after-dot
 			       (- +power-min+)))
-	 (scale (or scale 0))
-	 (lispstr (format nil "~,v,vF" digits-after-dot scale object)))
-    (when trim-zero?
-      (setf lispstr (string-right-trim '(#\0) lispstr)))
-    (loop for i from (1+ (position #\. lispstr)) below (length lispstr)
-       as c = (aref lispstr i)
-       for power downfrom -1 to (- digits-after-dot)
-       unless (digit-char-p c)
-       do (error 'not-formattable-error)
-       if (char/= #\0 c)
-       do (write-string (translate-digit c style) stream)
-       (write-string (get-power power style) stream))))
+	 (lispstr (let ((str (format nil "~,v,vF" digits-after-dot scale object)))
+		    (if trim-zero?
+			(string-right-trim '(#\0) str)
+			str)))
+	 (dot-pos (position #\. lispstr))
+	 (int-buf
+	  (with-output-to-string (stream)
+	    (print-jp-integer stream (parse-integer lispstr :start 0 :end dot-pos) style)))
+	 (frac-buf
+	  (with-output-to-string (stream)
+	    (loop for i from (1+ (position #\. lispstr)) below (length lispstr)
+	       as c = (aref lispstr i)
+	       for power downfrom -1 to (- digits-after-dot)
+	       unless (digit-char-p c)
+	       do (error 'not-formattable-error)
+	       if (char/= #\0 c)
+	       do (write-string (translate-digit c style) stream)
+		 (write-string (get-power power style) stream)))))
+    (values int-buf frac-buf)))
 
 
 (defun flag-to-style (colon-p at-sign-p)
@@ -182,7 +188,7 @@
 	      (setf object (- object)))
 	    (typecase object
 	      (integer
-	       (print-jp-integer stream object style scale)
+	       (print-jp-integer stream (* object (expt 10 scale)) style)
 	       (when (zerop object)
 		 (assert (zerop (length buf)))
 		 (write-string (get-digit 0 style) stream))
@@ -191,20 +197,17 @@
 	      (ratio
 	       (assert (not (zerop object)))
 	       (let ((object (* object (expt 10 scale))))
-		 (print-jp-integer stream (denominator object) style 0)
+		 (print-jp-integer stream (denominator object) style)
 		 (write-string (get-parts-of style) stream)
-		 (print-jp-integer stream (abs (numerator object)) style 0)))
+		 (print-jp-integer stream (abs (numerator object)) style)))
 	      (float
 	       (handler-bind ((error #'(lambda (c) ; Infinity or NaN.
 					 (error 'not-formattable-error c))))
-		 (let* ((int-part (floor object))
-			(int-buf (with-output-to-string (s)
-				   (print-jp-integer s int-part style scale)))
-			(frac-buf (with-output-to-string (s)
-				    (print-fractional-part s object style digits-after-dot scale))))
+		 (multiple-value-bind (int-buf frac-buf)
+		     (make-fractional-string object style digits-after-dot scale)
 		   (write-string int-buf stream)
 		   ;; prints '0' if needed
-		   (when (and (zerop int-part)
+		   (when (and (zerop (length int-buf))
 			      (or radix-point-char
 				  (zerop (length frac-buf))))
 		     (write-string (get-digit 0 style) stream))
@@ -250,27 +253,35 @@
 
 (defun yen (stream object &optional colon-p at-sign-p digits-after-dot
 	    &aux (style (flag-to-style colon-p at-sign-p)))
-  (case digits-after-dot
-    ((nil)
-     (setf digits-after-dot 2))
-    ((2 3)
-     t)
-    (otherwise
-     (error "digits should be 2, 3, or nil")))
-  (when (eq (pprint-jp-numeral stream object colon-p at-sign-p
-			       0 0 (get-yen style))
-	    style)
-    (setf object (abs object))
-    (when (>= digits-after-dot 2)
-      (let ((sen-num (rem (* 100 object) 100)))
-	(when (plusp sen-num)
-	  (pprint-jp-numeral stream sen-num colon-p at-sign-p 0 0 "")
-	  (write-string (get-sen style) stream))))
-    (when (>= digits-after-dot 3)
-      (let ((rin-num (rem (* 1000 object) 10)))
-	(when (plusp rin-num)
-	  (pprint-jp-numeral stream rin-num colon-p at-sign-p 0 0 "")
-	  (write-string (get-power -2 style) stream))))))
+  (flet ((print-ysr (signum yen sen rin)
+	   (when (zerop signum)
+	     (return-from print-ysr
+	       (pprint-jp-numeral stream 0 colon-p at-sign-p
+				  0 0 (get-yen style))))
+	   (when (minusp signum)
+	     (write-string (get-minus-sign style) stream))
+	   (unless (zerop yen)
+	     (pprint-jp-numeral stream (abs yen) colon-p at-sign-p
+				0 0 (get-yen style)))
+	   (unless (zerop sen)
+	     (pprint-jp-numeral stream (abs sen) colon-p at-sign-p
+				0 0 (get-sen style)))
+	   (unless (zerop rin)
+	     (pprint-jp-numeral stream (abs rin) colon-p at-sign-p
+				0 0 (get-power -2 style))))) ; 'rin' char (厘) 
+    (case digits-after-dot
+      ((nil 2)
+       (setf digits-after-dot 2)
+       (let ((quot-2 (round object 1/100)))
+	 (multiple-value-bind (yen sen) (truncate quot-2 100)
+	   (print-ysr (signum quot-2) yen sen 0))))
+      (3
+       (let ((quot-3 (round object 1/1000)))
+	 (multiple-value-bind (yen rin-rest) (truncate quot-3 1000)
+	   (multiple-value-bind (sen rin) (truncate rin-rest 10)
+	     (print-ysr (signum quot-3) yen sen rin)))))
+      (otherwise
+       (error "digits should be 2, 3, or nil")))))
 
 (defun Y (stream object &optional colon-p at-sign-p digits-after-dot)
   (yen stream object colon-p at-sign-p digits-after-dot))
