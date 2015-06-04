@@ -207,7 +207,7 @@
        (with-output-to-string (buf-stream buf)
 	 (case style
 	   (:positional
-	    (print-positional stream object style digits-after-dot scale radix-point-str))
+	    (print-positional buf-stream object style digits-after-dot scale radix-point-str))
 	   (otherwise
 	    (typecase object
 	      (integer
