@@ -127,8 +127,8 @@
      when (plusp (length digits4-str))
      do (when (plusp power)
 	  (push (get-power power style) strs))
-     and do (push digits4-str strs)
-     while (> rest 0)
+       (push digits4-str strs)
+     while (plusp rest)
      finally (mapc #'(lambda (s) (write-string s stream)) strs)))
 
 
@@ -249,28 +249,29 @@
 			  digits-after-dot)
   (wari stream object colon-p at-sign-p digits-after-dot))
 
-(defun yen (stream object &optional colon-p at-sign-p digits-after-dot)
-  (unless digits-after-dot
-    (setf digits-after-dot 2))
-  (unless (<= 2 digits-after-dot 3)
-    (error "Sen: digits should be 2 or 3"))
-  (let* ((style (flag-to-style colon-p at-sign-p))
-	 (yen-str (get-yen style)))
-    (when (eq (pprint-jp-numeral stream object colon-p at-sign-p
-				 0 0 yen-str)
-	      style)
-      (when (minusp object)
-	(setf object (- object)))
-      (when (>= digits-after-dot 2)
-	(let ((sen-num (rem (* 100 object) 100)))
-	  (when (plusp sen-num)
-	    (pprint-jp-numeral stream sen-num colon-p at-sign-p 0 0 "")
-	    (write-string (get-sen style) stream))))
-      (when (>= digits-after-dot 3)
-	(let ((rin-num (rem (* 1000 object) 10)))
-	  (when (plusp rin-num)
-	    (pprint-jp-numeral stream rin-num colon-p at-sign-p 0 0 "")
-	    (write-string (get-power -2 style) stream)))))))
+(defun yen (stream object &optional colon-p at-sign-p digits-after-dot
+	    &aux (style (flag-to-style colon-p at-sign-p)))
+  (case digits-after-dot
+    ((nil)
+     (setf digits-after-dot 2))
+    ((2 3)
+     t)
+    (otherwise
+     (error "digits should be 2, 3, or nil")))
+  (when (eq (pprint-jp-numeral stream object colon-p at-sign-p
+			       0 0 (get-yen style))
+	    style)
+    (setf object (abs object))
+    (when (>= digits-after-dot 2)
+      (let ((sen-num (rem (* 100 object) 100)))
+	(when (plusp sen-num)
+	  (pprint-jp-numeral stream sen-num colon-p at-sign-p 0 0 "")
+	  (write-string (get-sen style) stream))))
+    (when (>= digits-after-dot 3)
+      (let ((rin-num (rem (* 1000 object) 10)))
+	(when (plusp rin-num)
+	  (pprint-jp-numeral stream rin-num colon-p at-sign-p 0 0 "")
+	  (write-string (get-power -2 style) stream))))))
 
 (defun Y (stream object &optional colon-p at-sign-p digits-after-dot)
   (yen stream object colon-p at-sign-p digits-after-dot))
