@@ -5,7 +5,7 @@
 (define-condition no-power-char-error (error)
   ())
 
-(define-condition bad-format-float-error (error)
+(define-condition not-formattable-error (error)
   ((original-condition :initarg :original-condition :initform nil)))
 
 
@@ -59,47 +59,31 @@
 ;;; Writers
 
 (defun print-positional (stream object style digits-after-dot scale radix-point-str)
-  (let* ((trim-zero? (and (floatp object)
-			  (not digits-after-dot)))
-	 (digits-after-dot (or digits-after-dot
-			       (- +power-min+)))
-	 (lispstr
-	  (ctypecase object
-	    (integer (format nil "~D" object))
-	    (ratio (format nil "~D/~D" (numerator object) (denominator object)))
-	    (float (format nil "~,v,vF" digits-after-dot scale object))
-	    ;; FIXME: trim-zero doesn't work for complex.
-	    (complex (format nil "~,v,vF~,v,v@Fi" digits-after-dot scale (realpart object)
-			     digits-after-dot scale (imagpart object))))))
-    (when trim-zero?
-      (setf lispstr (string-right-trim '(#\0) lispstr)))
-    (loop for c across lispstr
-       as jp-str = 
-       (case c
-	 (#\0 (get-digit 0 style))
-	 (#\1 (get-digit 1 style))
-	 (#\2 (get-digit 2 style))
-	 (#\3 (get-digit 3 style))
-	 (#\4 (get-digit 4 style))
-	 (#\5 (get-digit 5 style))
-	 (#\6 (get-digit 6 style))
-	 (#\7 (get-digit 7 style))
-	 (#\8 (get-digit 8 style))
-	 (#\9 (get-digit 9 style))
-	 (#\. radix-point-str)
-	 (#\- (get-minus-sign style))
-	 (#\/ (get-parts-of style))
-	 ((#\d #\e #\f #\l #\s)
-	  (assert nil (c)
-		  "Exponent marker '~C' is found. This is an internal BUG of jp-numeral." c))
-	 ;; for complex
-	 ((#\+ #\i)
-	  (if (complexp object)
-	      (string c)
-	      (error 'bad-format-float-error)))
-	 (otherwise
-	  (error 'bad-format-float-error)))
-       do (write-string jp-str stream))))
+  (loop with lispstr
+       = (typecase object
+	   (integer (format nil "~D" object))
+	   (ratio (format nil "~D/~D" (numerator object) (denominator object)))
+	   (float (format nil "~,v,vF" digits-after-dot scale object))
+	   (t (error 'not-formattable-error)))
+     for c across lispstr
+     as jp-str = 
+     (case c
+       (#\0 (get-digit 0 style))
+       (#\1 (get-digit 1 style))
+       (#\2 (get-digit 2 style))
+       (#\3 (get-digit 3 style))
+       (#\4 (get-digit 4 style))
+       (#\5 (get-digit 5 style))
+       (#\6 (get-digit 6 style))
+       (#\7 (get-digit 7 style))
+       (#\8 (get-digit 8 style))
+       (#\9 (get-digit 9 style))
+       (#\. radix-point-str)
+       (#\- (get-minus-sign style))
+       (#\/ (get-parts-of style))
+       (otherwise
+	(error 'not-formattable-error)))
+     do (write-string jp-str stream)))
 
 
 (defun make-digits4-string (digits4 style)
@@ -131,7 +115,10 @@
 		(put-n (get-digit d0 style))))))))))
 
 (defun print-jp-integer (stream object style)
-  (declare (type (integer 0) object))
+  (declare (type integer object))
+  (when (minusp object)
+    (write-string (get-minus-sign style) stream)
+    (setf object (- object)))
   (loop with strs = nil
      for power from 0 by 4
      for (rest digits4) = (multiple-value-list (floor object 10000))
@@ -146,9 +133,12 @@
 
 
 (defun print-fraction (stream object style digits-after-dot scale radix-point-str)
-  (declare (type float object))
   (handler-bind ((error #'(lambda (c)
-			    (error 'bad-format-float-error :original-condition c))))
+			    ;; Infinity or NaN.
+			    (error 'not-formattable-error :original-condition c))))
+    (when (minusp object)
+      (write-string (get-minus-sign style) stream)
+      (setf object (- object)))
     (let* ((ratio (if digits-after-dot
 		      (rational object)
 		      (rationalize object)))
@@ -211,28 +201,20 @@
 	   (otherwise
 	    (typecase object
 	      (integer
-	       (when (minusp object)	; TODO: cleanup
-		 (write-string (get-minus-sign style) buf-stream))
-	       (print-jp-integer buf-stream (abs (* object (expt 10 scale))) style)
+	       (print-jp-integer buf-stream (* object (expt 10 scale)) style)
 	       (when radix-point-char
 		 (write-string radix-point-str buf-stream)))
 	      (ratio
-	       (when (minusp object)	; TODO: cleanup
+	       (when (minusp object)
 		 (write-string (get-minus-sign style) buf-stream))
 	       (let ((object (* object (expt 10 scale))))
 		 (print-jp-integer buf-stream (denominator object) style)
 		 (write-string (get-parts-of style) buf-stream)
 		 (print-jp-integer buf-stream (abs (numerator object)) style)))
 	      (float
-	       (when (minusp object)	; TODO: cleanup
-		 (write-string (get-minus-sign style) buf-stream))
-	       (print-fraction buf-stream (abs object) style digits-after-dot scale radix-point-str))
+	       (print-fraction buf-stream object style digits-after-dot scale radix-point-str))
 	      (t			; complex etc.
-	       ;; TODO: merge this code with no-power-char-error
-	       (assert (not (eq style :positional)))
-	       (setf style :positional)
-	       (setf (fill-pointer buf) 0)
-	       (go try-again)))
+	       (error 'not-formattable-error)))
 	    (unless (plusp (length buf))
 	      (write-string (get-digit 0 style) buf-stream)))))
      (no-power-char-error ()
@@ -241,9 +223,7 @@
        (setf style :positional)
        (setf (fill-pointer buf) 0)
        (go try-again))
-     (bad-format-float-error ()
-       ;; Infinity or NaN.
-       ;; TODO: Use right floating-point handlings.
+     (not-formattable-error ()
        (setf style nil)
        (setf (fill-pointer buf) 0)
        (format buf "~A" object)))
