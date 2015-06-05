@@ -133,21 +133,21 @@
 		    (if trim-zero?
 			(string-right-trim '(#\0) str)
 			str)))
-	 (dot-pos (position #\. lispstr))
-	 (int-buf
-	  (with-output-to-string (stream)
-	    (print-jp-integer stream (parse-integer lispstr :start 0 :end dot-pos) style)))
-	 (frac-buf
-	  (with-output-to-string (stream)
-	    (loop for i from (1+ (position #\. lispstr)) below (length lispstr)
-	       as c = (aref lispstr i)
-	       for power downfrom -1 to (- digits-after-dot)
-	       unless (digit-char-p c)
-	       do (error 'not-formattable-error)
-	       if (char/= #\0 c)
-	       do (write-string (translate-digit c style) stream)
-		 (write-string (get-power power style) stream)))))
-    (values int-buf frac-buf)))
+	 (dot-pos (position #\. lispstr)))
+    (unless dot-pos
+      (error 'not-formattable-error))
+    (values
+     (with-output-to-string (stream)
+       (print-jp-integer stream (parse-integer lispstr :end dot-pos) style))
+     (with-output-to-string (stream)
+       (loop for i from (1+ (position #\. lispstr)) below (length lispstr)
+	  as c = (aref lispstr i)
+	  for power downfrom -1 to (- digits-after-dot)
+	  unless (digit-char-p c)
+	  do (error 'not-formattable-error)
+	  if (char/= #\0 c)
+	  do (write-string (translate-digit c style) stream)
+	  (write-string (get-power power style) stream))))))
 
 
 (defun flag-to-style (colon-p at-sign-p)
@@ -161,7 +161,7 @@
 			  &aux (style (flag-to-style colon-p at-sign-p)))
   (unless (numberp object)
     (error "~A is not an expected type for jp-numeral" (type-of object)))
-  (prog ((*print-base* 10) ; *print-base* must be 10 for jp-numeral
+  (prog ((*print-base* 10)    ; *print-base* must be 10 for jp-numeral
 	 (scale (or scale 0))
 	 (radix-point-str (etypecase radix-point-char
 			    (string radix-point-char)
@@ -193,22 +193,23 @@
 		 (write-string (get-parts-of style) stream)
 		 (print-jp-integer stream (abs (numerator object)) style)))
 	      (float
-	       (handler-bind ((error #'(lambda (c) ; Infinity or NaN.
-					 (error 'not-formattable-error c))))
-		 (multiple-value-bind (int-buf frac-buf)
-		     (make-fractional-string object style digits-after-dot scale)
-		   (write-string int-buf stream)
-		   ;; prints '0' if needed
-		   (when (and (zerop (length int-buf))
-			      (or radix-point-char
-				  (zerop (length frac-buf))))
-		     (write-string (get-digit 0 style) stream))
-		   ;; prints '.' if needed
-		   (when (or radix-point-char
-			     (and (plusp (length int-buf))
-				  (plusp (length frac-buf))))
-		     (write-string radix-point-str stream))
-		   (write-string frac-buf stream))))
+	       (handler-case
+		   (multiple-value-bind (int-buf frac-buf)
+		       (make-fractional-string object style digits-after-dot scale)
+		     (write-string int-buf stream)
+		     ;; prints '0' if needed
+		     (when (and (zerop (length int-buf))
+				(or radix-point-char
+				    (zerop (length frac-buf))))
+		       (write-string (get-digit 0 style) stream))
+		     ;; prints '.' if needed
+		     (when (or radix-point-char
+			       (and (plusp (length int-buf))
+				    (plusp (length frac-buf))))
+		       (write-string radix-point-str stream))
+		     (write-string frac-buf stream))
+		 (error (c)		; Infinity or NaN.
+		   (error 'not-formattable-error :original-condition c))))
 	      (t			; complex etc.
 	       (error 'not-formattable-error))))))
      (no-power-char-error ()
