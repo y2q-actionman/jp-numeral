@@ -155,7 +155,7 @@
   (to-table-entry-load-form str-lis))
 
 
-(defun generate-file (output-file &optional (*package* *package*))
+(defun generate-file (output-file &optional (output-package *package*))
   (with-open-file (stream output-file
 			  :direction :output :if-exists :rename
 			  :if-does-not-exist :create)
@@ -166,56 +166,55 @@
 		  :test 'equalp :documentation ,docstring))
 	     (make-const-str-array-form (sym)
 	       (make-const-form sym (make-string-array-load-form (symbol-value sym))
-		   "A vector of (<normal> <formal> <old> <positional>")))
-      (let ((*print-circle* t)
-	    ;; To debug, comment out below.
-	    ;; (*print-pretty* nil)
-	    )
-	(format stream "~S~%"
-		`(in-package ,(package-name *package*)))
-	(terpri stream)
-	(format stream "~S~%"
-		(make-const-form '+table-normal-index+ 0))
-	(format stream "~S~%"
-		(make-const-form '+table-formal-index+ 1))
-	(format stream "~S~%"
-		(make-const-form '+table-old-index+ 2))
-	(format stream "~S~%"
-		(make-const-form '+table-positional-index+ 3))
-	(terpri stream)
-	(format stream "~S~%"
-		`(define-constant ,(gen-output-symbol '+digits+)
-		     ',(make-digits-load-form)
-		   :test 'equalp
-		   :documentation "A vector of (<normal> <formal> <old> <positional>)"))
-	(terpri stream)
-	(format stream "~S~%"
-		`(define-constant ,(gen-output-symbol '+power-alist+)
-		     ',(make-power-alist-load-form)
-		   :test 'equalp
-		   :documentation "An alist of (<power> . (<normal> <formal> <old> <positional>))"))
-	(terpri stream)
-	(format stream "~S~%"
-		(make-const-form '+power-max+ +power-max+))
-	(terpri stream)
-	(format stream "~S~%"
-		(make-const-form '+power-min+ +power-min+))
-	(terpri stream)
-	(format stream "~S~%"
-		(make-const-str-array-form '+minus-sign+))
-	(terpri stream)
-	(format stream "~S~%"
-		(make-const-str-array-form '+fraction-parts-of+))
-	(terpri stream)
-	(format stream "~S~%"
-		(make-const-str-array-form '+radix-point+))
-	(terpri stream)
-	(format stream "~S~%"
-		(make-const-str-array-form '+yen+))
-	(terpri stream)
-	(format stream "~S~%"
-		(make-const-str-array-form '+sen+))
-	(terpri stream)
-	(format stream "~S~%"
-		(make-const-str-array-form '+wari+))
-	))))
+				"A vector of (<normal> <formal> <old> <positional>")))
+      (with-standard-io-syntax
+	(let ((*print-circle* t)
+	      (*package* output-package))
+	  (format stream "~S~%"
+		  `(in-package ,(package-name *package*)))
+	  (terpri stream)
+	  (format stream "~S~%"
+		  (make-const-form '+table-normal-index+ 0))
+	  (format stream "~S~%"
+		  (make-const-form '+table-formal-index+ 1))
+	  (format stream "~S~%"
+		  (make-const-form '+table-old-index+ 2))
+	  (format stream "~S~%"
+		  (make-const-form '+table-positional-index+ 3))
+	  (terpri stream)
+	  (format stream "~S~%"
+		  `(define-constant ,(gen-output-symbol '+digits+)
+		       ',(make-digits-load-form)
+		     :test 'equalp
+		     :documentation "A vector of (<normal> <formal> <old> <positional>)"))
+	  (terpri stream)
+	  (format stream "~S~%"
+		  `(define-constant ,(gen-output-symbol '+power-alist+)
+		       ',(make-power-alist-load-form)
+		     :test 'equalp
+		     :documentation "An alist of (<power> . (<normal> <formal> <old> <positional>))"))
+	  (terpri stream)
+	  (format stream "~S~%"
+		  (make-const-form '+power-max+ +power-max+))
+	  (terpri stream)
+	  (format stream "~S~%"
+		  (make-const-form '+power-min+ +power-min+))
+	  (terpri stream)
+	  (format stream "~S~%"
+		  (make-const-str-array-form '+minus-sign+))
+	  (terpri stream)
+	  (format stream "~S~%"
+		  (make-const-str-array-form '+fraction-parts-of+))
+	  (terpri stream)
+	  (format stream "~S~%"
+		  (make-const-str-array-form '+radix-point+))
+	  (terpri stream)
+	  (format stream "~S~%"
+		  (make-const-str-array-form '+yen+))
+	  (terpri stream)
+	  (format stream "~S~%"
+		  (make-const-str-array-form '+sen+))
+	  (terpri stream)
+	  (format stream "~S~%"
+		  (make-const-str-array-form '+wari+))
+	  (fresh-line stream))))))

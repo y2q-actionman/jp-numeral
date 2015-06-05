@@ -67,11 +67,12 @@
 
 (defun print-positional (stream object style digits-after-dot scale radix-point-str)
   (loop with lispstr
-       = (typecase object
-	   (integer (format nil "~D" object))
-	   (ratio (format nil "~D/~D" (numerator object) (denominator object)))
-	   (float (format nil "~,v,vF" digits-after-dot scale object))
-	   (t (error 'not-formattable-error)))
+       = (with-standard-io-syntax
+	   (typecase object
+	     (integer (format nil "~D" object))
+	     (ratio (format nil "~D/~D" (numerator object) (denominator object)))
+	     (float (format nil "~,v,vF" digits-after-dot scale object))
+	     (t (error 'not-formattable-error))))
      for c across lispstr
      as jp-str = 
      (case c
@@ -129,7 +130,8 @@
   (let* ((trim-zero? (not digits-after-dot))
 	 (digits-after-dot (or digits-after-dot
 			       (- +power-min+)))
-	 (lispstr (let ((str (format nil "~,v,vF" digits-after-dot scale object)))
+	 (lispstr (let ((str (with-standard-io-syntax
+			       (format nil "~,v,vF" digits-after-dot scale object))))
 		    (if trim-zero?
 			(string-right-trim '(#\0) str)
 			str)))
