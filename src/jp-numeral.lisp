@@ -241,11 +241,10 @@
   (pprint-jp-numeral stream object colon-p at-sign-p
 		     digits-after-dot scale radix-point-char))
   
-(defun wari (stream object &optional colon-p at-sign-p
-			     digits-after-dot)
-  (assert (= (length +wari+) 1))
+(defun wari (stream object &optional colon-p at-sign-p digits-after-dot
+	     &aux (style (flag-to-style colon-p at-sign-p)))
   (pprint-jp-numeral stream object colon-p at-sign-p
-		     digits-after-dot 1 (char +wari+ 0)))
+		     digits-after-dot 1 (get-wari style)))
 
 (defun W (stream object &optional colon-p at-sign-p
 			  digits-after-dot)
