@@ -28,6 +28,23 @@
 		     :octets (babel:string-to-octets str :encoding :utf-8))
       nil))
 
+(defun to-table-entry-load-form (entry)
+  (destructuring-bind (normal &optional formal old positional) entry
+    (let* ((normal-octets (etypecase normal
+			    (string
+			     (to-octets-printer normal))
+			    (vector
+			     (make-instance 'octets-printer
+					    :octets normal))))
+	   (formal-octets (or (to-octets-printer formal)
+			      normal-octets))
+	   (old-octets (or (to-octets-printer old)
+			   formal-octets))
+	   (positional-octets (or (to-octets-printer positional)
+				  normal-octets)))
+      (vector normal-octets formal-octets
+	      old-octets positional-octets))))
+
 
 (define-constant +digits+
     #(("〇" nil "零")
@@ -45,79 +62,62 @@
 (defun make-digits-load-form ()
   (loop with buf = (make-array (array-dimensions +digits+)
 			       :fill-pointer 0)
-     for (normal formal old) across +digits+
-     as normal-octets = (to-octets-printer normal)
-     as formal-octets = (or (to-octets-printer formal) normal-octets)
-     as old-octets = (or (to-octets-printer old) formal-octets)
-     do (vector-push (vector normal-octets formal-octets old-octets) buf)
+     for entry across +digits+
+     do (vector-push (to-table-entry-load-form entry) buf)
      finally (return buf)))
 
 
 (define-constant +power-alist+
-    '((1 . ("十" "拾" nil))
+    '((0 . (""))
+      (1 . ("十" "拾" nil))
       (2 . ("百" nil "佰"))
       (3 . ("千" nil "仟"))
       ;; myriads
       (4 . ("万" nil "萬"))
-      (8 . "億")
-      (12 . "兆")
-      (16 . "京")
-      (20 . "垓")
+      (8 . ("億"))
+      (12 . ("兆"))
+      (16 . ("京"))
+      (20 . ("垓"))
       (24 . (#(240 165 157 177) nil "秭")) ; U+25771 may be out of Lisp string..
       ;; BUG: babel on ACL makes #(237 161 149 237 189 177) from U+25771 !!
-      (28 . "穣")
-      (32 . "溝")
-      (36 . "澗")
-      (40 . "正")
-      (44 . "載")
-      (48 . "極")
-      (52 . "恒河沙")
-      (56 . "阿僧祇")
-      (60 . "那由他")
-      (64 . "不可思議")
-      (68 . "無量大数")
+      (28 . ("穣"))
+      (32 . ("溝"))
+      (36 . ("澗"))
+      (40 . ("正"))
+      (44 . ("載"))
+      (48 . ("極"))
+      (52 . ("恒河沙"))
+      (56 . ("阿僧祇"))
+      (60 . ("那由他"))
+      (64 . ("不可思議"))
+      (68 . ("無量大数"))
       ;; fractions
-      (-1 . "分")
+      (-1 . ("分"))
       (-2 . ("厘" nil "釐"))
       (-3 . ("毛" nil "毫"))
       (-4 . ("糸" nil "絲"))
-      (-5 . "忽")
-      (-6 . "微")
-      (-7 . "繊")
-      (-8 . "沙")
-      (-9 . "塵")
-      (-10 . "埃")
-      (-11 . "渺")
-      (-12 . "漠")
-      (-13 . "模糊")
-      (-14 . "逡巡")
-      (-15 . "須臾")
-      (-16 . "瞬息")
-      (-17 . "弾指")
-      (-18 . "刹那")
-      (-19 . "六徳")
-      (-20 . "虚空")
-      (-21 . "清浄"))
+      (-5 . ("忽"))
+      (-6 . ("微"))
+      (-7 . ("繊"))
+      (-8 . ("沙"))
+      (-9 . ("塵"))
+      (-10 . ("埃"))
+      (-11 . ("渺"))
+      (-12 . ("漠"))
+      (-13 . ("模糊"))
+      (-14 . ("逡巡"))
+      (-15 . ("須臾"))
+      (-16 . ("瞬息"))
+      (-17 . ("弾指"))
+      (-18 . ("刹那"))
+      (-19 . ("六徳"))
+      (-20 . ("虚空"))
+      (-21 . ("清浄")))
   :test 'equalp)
 
 (defun make-power-alist-load-form ()
-  (loop for (i . data) in +power-alist+
-     collect
-     (etypecase data
-       (string
-	(let ((octets (to-octets-printer data)))
-	  (cons i (vector octets octets octets))))
-       (list
-	(destructuring-bind (normal formal old) data
-	  (let* ((normal-octets (etypecase normal
-				  (string
-				   (to-octets-printer normal))
-				  (vector
-				   (make-instance 'octets-printer
-						  :octets normal))))
-		 (formal-octets (or (to-octets-printer formal) normal-octets))
-		 (old-octets (or (to-octets-printer old) formal-octets)))
-	    (cons i (vector normal-octets formal-octets old-octets))))))))
+  (loop for (i . entry) in +power-alist+
+     collect (cons i (to-table-entry-load-form entry))))
 
 
 (define-constant +power-max+
@@ -127,39 +127,32 @@
     (apply #'min (mapcar #'car +power-alist+)))
 
 
-(defun make-string-array-load-form (arr)
-  (loop with buf = (make-array (array-dimensions arr)
-			       :fill-pointer 0)
-     as prev-octets = nil then (or str-octets prev-octets)
-     for str across arr
-     as str-octets = (or (to-octets-printer str) prev-octets)
-     do (vector-push str-octets buf)
-     finally (return buf)))
-
-
 (define-constant +minus-sign+
-    #("マイナス" "負の" "負之" "−")
+    '("マイナス" "負の" "負之" "−")
   :test 'equalp)
 
 (define-constant +fraction-parts-of+
-    #("分の" nil "分之" "／")
+    '("分の" nil "分之" "／")
   :test 'equalp)
 
 (define-constant +radix-point+
-    #("・" nil nil nil)
+    '("" nil nil "・")
   :test 'equalp)
 
 (define-constant +sen+
-    #("銭" nil "錢")
+    '("銭" nil "錢")
   :test 'equalp)
 
 (define-constant +yen+
-    #("円" nil "圓")
+    '("円" nil "圓")
   :test 'equalp)
 
 (define-constant +wari+
-    "割"
+    '("割")
   :test 'equalp)
+
+(defun make-string-array-load-form (str-lis)
+  (to-table-entry-load-form str-lis))
 
 
 (defun generate-file (output-file &optional (*package* *package*))
@@ -171,11 +164,12 @@
 	     (make-const-form (sym val &optional docstring)
 	       `(define-constant ,(gen-output-symbol sym) ,val
 		  :test 'equalp :documentation ,docstring))
-	     (make-str-array-form (sym)
+	     (make-const-str-array-form (sym)
 	       (make-const-form sym (make-string-array-load-form (symbol-value sym))
 		   "A vector of (<normal> <formal> <old> <positional>")))
       (let ((*print-circle* t)
-	    ;; (*print-pretty* nil) ; currently commented out for debug. TODO: enable this.
+	    ;; To debug, comment out below.
+	    ;; (*print-pretty* nil)
 	    )
 	(format stream "~S~%"
 		`(in-package ,(package-name *package*)))
@@ -193,13 +187,13 @@
 		`(define-constant ,(gen-output-symbol '+digits+)
 		     ',(make-digits-load-form)
 		   :test 'equalp
-		   :documentation "A vector of (<normal> <formal> <old>)"))
+		   :documentation "A vector of (<normal> <formal> <old> <positional>)"))
 	(terpri stream)
 	(format stream "~S~%"
 		`(define-constant ,(gen-output-symbol '+power-alist+)
 		     ',(make-power-alist-load-form)
 		   :test 'equalp
-		   :documentation "An alist of (<power> . (<normal> <formal> <old>))"))
+		   :documentation "An alist of (<power> . (<normal> <formal> <old> <positional>))"))
 	(terpri stream)
 	(format stream "~S~%"
 		(make-const-form '+power-max+ +power-max+))
@@ -208,20 +202,20 @@
 		(make-const-form '+power-min+ +power-min+))
 	(terpri stream)
 	(format stream "~S~%"
-		(make-str-array-form '+minus-sign+))
+		(make-const-str-array-form '+minus-sign+))
 	(terpri stream)
 	(format stream "~S~%"
-		(make-str-array-form '+fraction-parts-of+))
+		(make-const-str-array-form '+fraction-parts-of+))
 	(terpri stream)
 	(format stream "~S~%"
-		(make-str-array-form '+radix-point+))
+		(make-const-str-array-form '+radix-point+))
 	(terpri stream)
 	(format stream "~S~%"
-		(make-str-array-form '+yen+))
+		(make-const-str-array-form '+yen+))
 	(terpri stream)
 	(format stream "~S~%"
-		(make-str-array-form '+sen+))
+		(make-const-str-array-form '+sen+))
 	(terpri stream)
 	(format stream "~S~%"
-		(make-const-form '+wari+ (to-octets-printer +wari+)))
+		(make-const-str-array-form '+wari+))
 	))))

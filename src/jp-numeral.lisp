@@ -11,49 +11,43 @@
 
 ;;; Accessors to the jp-numeral-table.
 
-(defun style-to-index (style enable-positional-p)
+(defun style-to-index (style)
   (ecase style
     (:normal +TABLE-NORMAL-INDEX+)
     (:formal +TABLE-FORMAL-INDEX+)
     (:old +TABLE-OLD-INDEX+)
-    (:positional (if enable-positional-p
-		     +TABLE-POSITIONAL-INDEX+
-		     +TABLE-NORMAL-INDEX+))))
+    (:positional +TABLE-POSITIONAL-INDEX+)))
 
 (defun get-digit (n style)
   (assert (<= 0 n 9))
   (let ((entry (aref +digits+ n)))
-    (aref entry (style-to-index style nil))))
+    (aref entry (style-to-index style))))
      
 (defun get-power (n style)
   (unless (<= +power-min+ n +power-max+)
     (error 'no-power-char-error))
   (alexandria:if-let ((a-entry (assoc n +power-alist+)))
     (aref (cdr a-entry)
-	  (style-to-index style nil))
+	  (style-to-index style))
     (assert nil (n) "~D does not have an apropriate char" n)))
 
 (defun get-minus-sign (style)
-  (aref +minus-sign+
-	(style-to-index style t)))
+  (aref +minus-sign+ (style-to-index style)))
   
 (defun get-parts-of (style)
-  (aref +fraction-parts-of+
-	(style-to-index style t)))
+  (aref +fraction-parts-of+ (style-to-index style)))
 
 (defun get-radix-point (style)
-  (aref +radix-point+
-	(style-to-index style t)))
+  (aref +radix-point+ (style-to-index style)))
 
 (defun get-yen (style)
-  (aref +yen+ (style-to-index style nil)))
+  (aref +yen+ (style-to-index style)))
 
 (defun get-sen (style)
-  (aref +sen+ (style-to-index style nil)))
+  (aref +sen+ (style-to-index style)))
 
 (defun get-wari (style)
-  (declare (ignore style))
-  +wari+)
+  (aref +wari+ (style-to-index style)))
 
 
 ;;; Writers
@@ -93,7 +87,6 @@
 
 (defun make-digits4-string (digits4 style)
   (declare (type (integer 0 9999) digits4))
-  (assert (not (eq style :positional)))
   (let ((fill-1 (ecase style
 		  (:normal nil)
 		  ((:formal :old) t))))
@@ -127,8 +120,7 @@
      then (multiple-value-list (floor rest 10000))
      as digits4-str = (make-digits4-string digits4 style)
      when (plusp (length digits4-str))
-     do (when (plusp power)
-	  (push (get-power power style) strs))
+     do (push (get-power power style) strs)
        (push digits4-str strs)
      while (plusp rest)
      finally (mapc #'(lambda (s) (write-string s stream)) strs)))
