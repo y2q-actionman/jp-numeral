@@ -13,8 +13,10 @@
   :components
   ((:module "test"
     :components
-    ((:file "package"))))
-  ;; :perform (asdf:test-op (o s)
-  ;; 			 (uiop:symbol-call '#:jp-numeral.test '#:main))
+    ((:file "package")
+     (:file "util")
+     (:file "all"))))
+  :perform (asdf:test-op (o s)
+  			 (uiop:symbol-call '#:jp-numeral.test '#:main))
   )
 
