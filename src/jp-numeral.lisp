@@ -6,7 +6,7 @@
   ())
 
 (define-condition not-formattable-error (error)
-  ((original-condition :initarg :original-condition :initform nil)))
+  ())
 
 
 ;;; Accessors to the jp-numeral-table.
