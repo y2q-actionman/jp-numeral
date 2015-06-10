@@ -173,15 +173,15 @@
 	(t :normal)))
 
 (defun pprint-jp-numeral (o-stream object &optional colon-p at-sign-p
-			  digits-after-dot scale radix-point-char
+			  digits-after-dot scale radix-point-arg
 			  &aux (style (flag-to-style colon-p at-sign-p)))
   (unless (numberp object)
     (error "~A is not an expected type for jp-numeral" (type-of object)))
   (prog ((*print-base* 10)    ; *print-base* must be 10 for jp-numeral
 	 (scale (or scale 0))
-	 (radix-point-str (etypecase radix-point-char
-			    (string radix-point-char)
-			    (character (string radix-point-char))
+	 (radix-point-str (etypecase radix-point-arg
+			    (string radix-point-arg)
+			    (character (string radix-point-arg))
 			    (null (get-radix-point style))))
 	 (buf (make-array '(1) :element-type 'character :fill-pointer 0 :adjustable t)))
    try-again
@@ -196,7 +196,7 @@
 	    (if (zerop object)
 		(write-string (get-digit 0 style) stream)
 		(print-jp-integer stream (* (abs object) (expt 10 scale)) style))
-	    (when radix-point-char
+	    (when radix-point-arg
 	      (write-string radix-point-str stream)))
 	   ((rationalp object)
 	    (assert (not (zerop object)))
@@ -210,7 +210,7 @@
 	    (when (minusp object)
 	      (write-string (get-minus-sign style) stream))
 	    (print-jp-fraction stream (abs object) style digits-after-dot scale
-			       radix-point-str radix-point-char))
+			       radix-point-str radix-point-arg))
 	   (t				; complex etc.
 	    (error 'not-formattable-error))))
      (no-power-char-error ()
@@ -232,14 +232,14 @@
 ;;; cl:format interface
 
 (defun JP (stream object &optional colon-p at-sign-p
-			  digits-after-dot scale radix-point-char)
+			  digits-after-dot scale radix-point-arg)
   (pprint-jp-numeral stream object colon-p at-sign-p
-		     digits-after-dot scale radix-point-char))
+		     digits-after-dot scale radix-point-arg))
   
 (defun J (stream object &optional colon-p at-sign-p
-			  digits-after-dot scale radix-point-char)
+			  digits-after-dot scale radix-point-arg)
   (pprint-jp-numeral stream object colon-p at-sign-p
-		     digits-after-dot scale radix-point-char))
+		     digits-after-dot scale radix-point-arg))
   
 (defun wari (stream object &optional colon-p at-sign-p digits-after-dot
 	     &aux (style (flag-to-style colon-p at-sign-p)))

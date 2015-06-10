@@ -12,9 +12,11 @@
   :depends-on (:jp-numeral)
   :components
   ((:module "test"
+    :serial t    
     :components
     ((:file "package")
      (:file "util")
+     (:file "normal")
      (:file "all"))))
   :perform (asdf:test-op (o s)
   			 (uiop:symbol-call '#:jp-numeral.test '#:main))
