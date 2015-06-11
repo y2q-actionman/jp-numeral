@@ -129,6 +129,8 @@
 
 (defun print-jp-fraction (stream object style digits-after-dot scale
 			  radix-point-str radix-point-required-p)
+  (unless (<= +power-min+ (log object 10) +power-max+)
+    (error 'not-formattable-error))
   (let* ((trim-zero? (not digits-after-dot))
 	 (digits-after-dot (or digits-after-dot
 			       (- +power-min+)))
