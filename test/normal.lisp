@@ -897,13 +897,85 @@
   ;; 
   t)
   
+(defun test-jp-normal-float ()
+  ;; 0.1-0.9
+  (assert (equal "一分" (jp-str/n 0.1)))
+  (assert (equal "二分" (jp-str/n 0.2)))
+  (assert (equal "三分" (jp-str/n 0.3)))
+  (assert (equal "四分" (jp-str/n 0.4)))
+  (assert (equal "五分" (jp-str/n 0.5)))
+  (assert (equal "六分" (jp-str/n 0.6)))
+  (assert (equal "七分" (jp-str/n 0.7)))
+  (assert (equal "八分" (jp-str/n 0.8)))
+  (assert (equal "九分" (jp-str/n 0.9)))
+  ;; 0.10-0.30
+  (assert (equal "一分" (jp-str/n 0.10)))
+  (assert (equal "一分一厘" (jp-str/n 0.11)))
+  (assert (equal "一分二厘" (jp-str/n 0.12)))
+  (assert (equal "一分三厘" (jp-str/n 0.13)))
+  (assert (equal "一分四厘" (jp-str/n 0.14)))
+  (assert (equal "一分五厘" (jp-str/n 0.15)))
+  (assert (equal "一分六厘" (jp-str/n 0.16)))
+  (assert (equal "一分七厘" (jp-str/n 0.17)))
+  (assert (equal "一分八厘" (jp-str/n 0.18)))
+  (assert (equal "一分九厘" (jp-str/n 0.19)))
+  (assert (equal "二分" (jp-str/n 0.20)))
+  (assert (equal "二分一厘" (jp-str/n 0.21)))
+  (assert (equal "二分二厘" (jp-str/n 0.22)))
+  (assert (equal "二分三厘" (jp-str/n 0.23)))
+  (assert (equal "二分四厘" (jp-str/n 0.24)))
+  (assert (equal "二分五厘" (jp-str/n 0.25)))
+  (assert (equal "二分六厘" (jp-str/n 0.26)))
+  (assert (equal "二分七厘" (jp-str/n 0.27)))
+  (assert (equal "二分八厘" (jp-str/n 0.28)))
+  (assert (equal "二分九厘" (jp-str/n 0.29)))
+  (assert (equal "三分" (jp-str/n 0.30)))
+  ;; small nums
+  (assert (equal "十・三分四厘" (jp-str/n 10.34)))
+  (assert (equal "一・三厘四毛" (jp-str/n 1.034)))
+  (assert (equal "一分三毛四糸" (jp-str/n 0.1034)))
+  (assert (equal "一厘三糸四忽" (jp-str/n 0.01034)))
+  (assert (equal "一毛三忽四微" (jp-str/n 0.001034)))
+  (assert (equal "一糸三微四繊" (jp-str/n 0.0001034)))
+  (assert (equal "一忽三繊四沙" (jp-str/n 0.00001034)))
+  (assert (equal "一微三沙四塵" (jp-str/n 0.000001034)))
+  (assert (equal "一繊三塵四埃" (jp-str/n 0.0000001034)))
+  (assert (equal "一沙三埃四渺" (jp-str/n 0.00000001034)))
+  (assert (equal "一塵三渺四漠" (jp-str/n 0.000000001034)))
+  (assert (equal "一埃三漠四模糊" (jp-str/n 0.0000000001034)))
+  (assert (equal "一渺三模糊四逡巡" (jp-str/n 0.00000000001034)))
+  (assert (equal "一漠三逡巡四須臾" (jp-str/n 0.000000000001034)))
+  (assert (equal "一模糊三須臾四瞬息" (jp-str/n 0.0000000000001034)))
+  (assert (equal "一逡巡三瞬息四弾指" (jp-str/n 0.00000000000001034)))
+  (assert (equal "一須臾三弾指四刹那" (jp-str/n 0.000000000000001034)))
+  (assert (equal "一瞬息三刹那四六徳" (jp-str/n 0.0000000000000001034)))
+  (assert (equal "一弾指三六徳四虚空" (jp-str/n 0.00000000000000001034)))
+  (assert (equal "一刹那三虚空四清浄" (jp-str/n 0.000000000000000001034)))
+  ;;
+  t)
+
+(defun test-jp-normal-fallback ()
+  ;; too big num
+  (assert (equal "一無量大数" (jp-str/n (expt 10 68))))
+  (assert (equal "一〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇"
+		 (jp-str/n (expt 10 72))))
+  ;; too small num
+  (assert (equal "一清浄" (jp-str/n 0.000000000000000000001)))
+  (assert (equal (format nil "~A" 0.0000000000000000000001)
+  		 (jp-str/n 0.0000000000000000000001)))
+  ;; complex
+  (assert (equal (format nil "~A" #c(1 1))
+  		 (jp-str/n #c(1 1))))
+  ;;
+  t)
 
 (defun test-jp-normal ()
   (and (test-jp-normal-integer-4digits)
        (test-jp-normal-integer-bignums)
        (test-jp-normal-integer-minus)
        (test-jp-normal-rational)
+       (test-jp-normal-float)
+       (test-jp-normal-fallback)
        ;; TODO:
-       ;; - float
-       ;; - checks fallback to positional  
+       ;; - check parameters
        t))

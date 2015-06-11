@@ -136,7 +136,7 @@
   :test 'equalp)
 
 (define-constant +radix-point+
-    '("" nil nil "・")
+    '("・")
   :test 'equalp)
 
 (define-constant +sen+
@@ -160,7 +160,7 @@
 			  :direction :output :if-exists :rename
 			  :if-does-not-exist :create)
     (labels ((gen-output-symbol (sym)
-	       (intern (symbol-name sym) *package*))
+	       (intern (symbol-name sym) output-package))
 	     (make-const-form (sym val &optional docstring)
 	       `(define-constant ,(gen-output-symbol sym) ,val
 		  :test 'equalp :documentation ,docstring))
