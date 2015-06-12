@@ -129,11 +129,11 @@
 
 (defun print-jp-fraction (stream object style digits-after-dot scale
 			  radix-point-str radix-point-required-p)
-  (unless (<= +power-min+ (log object 10) +power-max+)
-    (error 'not-formattable-error))
   (let* ((trim-zero? (not digits-after-dot))
 	 (digits-after-dot (or digits-after-dot
-			       (- +power-min+)))
+			       (prog1 (- +power-min+)
+				 (when (< (log object 10) +power-min+)
+				   (error 'not-formattable-error)))))
 	 (lispstr (let ((str (with-standard-io-syntax
 			       (format nil "~,v,vF" digits-after-dot scale object))))
 		    (if trim-zero?
@@ -160,7 +160,7 @@
     ;; frac part
     (loop for i from (1+ dot-pos) below (length lispstr)
        as c = (aref lispstr i)
-       for power downfrom -1 to (- digits-after-dot)
+       for power downfrom -1
        unless (digit-char-p c)
        do (error 'not-formattable-error)
        if (char/= #\0 c)
