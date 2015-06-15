@@ -52,8 +52,34 @@
 
 ;;; Writers
 
-(defun translate-digit (c style)
-  (ecase c
+(defgeneric write-jp-numeral
+    (object style stream
+	    &key digits-after-dot scale radix-point-string
+	    radix-point-required-p)
+  (:method (object style stream &key &allow-other-keys)
+    (declare (ignore object style stream))
+    (error 'not-formattable-error)))
+
+
+(defmethod write-jp-numeral :around ((object rational) style stream
+				     &rest args
+				     &key scale &allow-other-keys)
+  (let* ((scaled-object (* object (expt 10 scale)))
+	 (original-type (type-of object))
+	 (scaled-type (type-of scaled-object)))
+    ;; If they are not same type, dispatch the object again.
+    (if (and (subtypep original-type scaled-type)
+	     (subtypep scaled-type original-type))
+	(apply #'call-next-method scaled-object style stream
+	       :scale 0
+	       args)
+	(apply #'write-jp-numeral scaled-object style stream
+	       :scale 0
+	       args))))
+
+
+(defun translate-number-char (c style &optional radix-point-string)
+  (case c
     (#\0 (get-digit 0 style))
     (#\1 (get-digit 1 style))
     (#\2 (get-digit 2 style))
@@ -63,27 +89,44 @@
     (#\6 (get-digit 6 style))
     (#\7 (get-digit 7 style))
     (#\8 (get-digit 8 style))
-    (#\9 (get-digit 9 style))))
+    (#\9 (get-digit 9 style))
+    (#\. (or radix-point-string
+	     (error 'not-formattable-error)))
+    (#\- (get-minus-sign style))
+    (#\/ (get-parts-of style))
+    (otherwise
+     (error 'not-formattable-error))))
 
-(defun print-positional (stream object style digits-after-dot scale radix-point-str)
-  (loop with lispstr
-       = (with-standard-io-syntax
-	   (typecase object
-	     (integer (format nil "~D" object))
-	     (ratio (format nil "~D/~D" (numerator object) (denominator object)))
-	     (float (format nil "~,v,vF" digits-after-dot scale object))
-	     (t (error 'not-formattable-error))))
-     for c across lispstr
-     as jp-str = 
-     (case c
-       ((#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
-	(translate-digit c style))
-       (#\. radix-point-str)
-       (#\- (get-minus-sign style))
-       (#\/ (get-parts-of style))
-       (otherwise
-	(error 'not-formattable-error)))
+(defun write-positional-from-string (lispstr stream style
+				     &optional radix-point-string)
+  (loop for c across lispstr
+     as jp-str = (translate-number-char c style radix-point-string)
      do (write-string jp-str stream)))
+
+(defmethod write-jp-numeral ((object integer) (style (eql :positional)) stream
+			     &key digits-after-dot scale radix-point-string
+			     radix-point-required-p)
+  (declare (ignore digits-after-dot)
+	   (ignorable scale))
+  (assert (zerop scale))
+  (write-positional-from-string (format nil "~D" object) stream style)
+  (when radix-point-required-p
+    (write-string radix-point-string stream)))
+
+(defmethod write-jp-numeral ((object ratio) (style (eql :positional)) stream
+			     &key digits-after-dot scale radix-point-string
+			     radix-point-required-p)
+  (declare (ignore digits-after-dot radix-point-string radix-point-required-p)
+	   (ignorable scale))
+  (assert (zerop scale))
+  (write-positional-from-string (format nil "~D/~D" (numerator object) (denominator object))
+				stream style))
+
+(defmethod write-jp-numeral ((object float) (style (eql :positional)) stream
+			     &key digits-after-dot scale radix-point-string
+			     radix-point-required-p)
+  (write-positional-from-string (format nil "~,v,vF" digits-after-dot scale object)
+				stream style radix-point-string))
 
 
 (defun make-digits4-string (digits4 style)
@@ -126,9 +169,39 @@
      while (plusp rest)
      finally (mapc #'(lambda (s) (write-string s stream)) strs)))
 
+(defmethod write-jp-numeral ((object integer) style stream
+			     &rest args
+			     &key digits-after-dot scale radix-point-string
+			     radix-point-required-p)
+  (declare (ignore digits-after-dot)
+	   (ignorable scale))
+  (assert (zerop scale))
+  (when (minusp object)
+    (write-string (get-minus-sign style) stream))
+  (if (zerop object)
+      (write-string (get-digit 0 style) stream)
+      (print-jp-plus-integer stream (abs object) style))
+  (when radix-point-required-p
+    (write-string radix-point-string stream)))
 
-(defun print-jp-fraction (stream object style digits-after-dot scale
-			  radix-point-str radix-point-required-p)
+(defmethod write-jp-numeral ((object ratio) style stream
+			     &rest args
+			     &key digits-after-dot scale radix-point-string
+			     radix-point-required-p)
+  (declare (ignore digits-after-dot radix-point-string
+		   radix-point-required-p)
+	   (ignorable scale))
+  (assert (zerop scale))
+  (when (minusp object)
+    (write-string (get-minus-sign style) stream))
+  (print-jp-plus-integer stream (denominator object) style)
+  (write-string (get-parts-of style) stream)
+  (print-jp-plus-integer stream (abs (numerator object)) style))
+
+
+(defmethod write-jp-numeral ((object float) style stream
+			     &key digits-after-dot scale radix-point-string
+			     radix-point-required-p)
   (when (minusp object)
     (write-string (get-minus-sign style) stream)
     (setf object (- object)))
@@ -159,7 +232,7 @@
     (when (or radix-point-required-p
 	      (and (not (zerop int-part))
 		   (plusp frac-part-strlen)))
-      (write-string radix-point-str stream))
+      (write-string radix-point-string stream))
     ;; frac part
     (loop for i from (1+ dot-pos) below (length lispstr)
        as c = (aref lispstr i)
@@ -167,7 +240,7 @@
        unless (digit-char-p c)
        do (error 'not-formattable-error)
        if (char/= #\0 c)
-       do (write-string (translate-digit c style) stream)
+       do (write-string (translate-number-char c style) stream)
        (write-string (get-power power style) stream))))
 
 
@@ -192,37 +265,11 @@
    try-again
    (handler-case
        (with-output-to-string (stream buf)
-	 (flet ((apply-scale (type)
-		  (unless (zerop scale)
-		    (setf object (* object (expt 10 scale))
-			  scale 0)
-		    (unless (typep object type)
-		      (go try-again)))))
-	   (cond
-	     ((eq style :positional)
-	      (print-positional stream object style digits-after-dot scale radix-point-str))
-	     ((integerp object)
-	      (apply-scale 'integer)
-	      (when (minusp object)
-		(write-string (get-minus-sign style) stream))
-	      (if (zerop object)
-		  (write-string (get-digit 0 style) stream)
-		  (print-jp-plus-integer stream (abs object) style))
-	      (when radix-point-arg
-		(write-string radix-point-str stream)))
-	     ((rationalp object)
-	      (assert (not (zerop object)))
-	      (apply-scale 'ratio)
-	      (when (minusp object)
-		(write-string (get-minus-sign style) stream))
-	      (print-jp-plus-integer stream (denominator object) style)
-	      (write-string (get-parts-of style) stream)
-	      (print-jp-plus-integer stream (abs (numerator object)) style))
-	     ((floatp object)
-	      (print-jp-fraction stream object style digits-after-dot scale
-				 radix-point-str radix-point-arg))
-	     (t				; complex etc.
-	      (error 'not-formattable-error)))))
+	 (write-jp-numeral object style stream
+			   :digits-after-dot digits-after-dot
+			   :scale scale
+			   :radix-point-string radix-point-str
+			   :radix-point-required-p radix-point-arg))
      (no-power-char-error ()
        ;; Decimal power chars are exhausted. Use positional.
        (assert (not (eq style :positional)))
@@ -241,24 +288,19 @@
 
 ;;; cl:format interface
 
-(defun JP (stream object &optional colon-p at-sign-p
-			  digits-after-dot scale radix-point-arg)
-  (pprint-jp-numeral stream object colon-p at-sign-p
-		     digits-after-dot scale radix-point-arg))
+(defun JP (&rest args)
+  (apply #'pprint-jp-numeral args))
   
-(defun J (stream object &optional colon-p at-sign-p
-			  digits-after-dot scale radix-point-arg)
-  (pprint-jp-numeral stream object colon-p at-sign-p
-		     digits-after-dot scale radix-point-arg))
+(defun J (&rest args)
+  (apply #'pprint-jp-numeral args))
   
 (defun wari (stream object &optional colon-p at-sign-p digits-after-dot
 	     &aux (style (flag-to-style colon-p at-sign-p)))
   (pprint-jp-numeral stream object colon-p at-sign-p
 		     digits-after-dot 1 (get-wari style)))
 
-(defun W (stream object &optional colon-p at-sign-p
-			  digits-after-dot)
-  (wari stream object colon-p at-sign-p digits-after-dot))
+(defun W (&rest args)
+  (apply #'wari args))
 
 (defun yen (stream object &optional colon-p at-sign-p digits-after-dot
 	    &aux (style (flag-to-style colon-p at-sign-p)))
@@ -292,5 +334,5 @@
       (otherwise
        (error "digits should be 2, 3, or nil")))))
 
-(defun Y (stream object &optional colon-p at-sign-p digits-after-dot)
-  (yen stream object colon-p at-sign-p digits-after-dot))
+(defun Y (&rest args)
+  (apply #'yen args))
