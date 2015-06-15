@@ -951,6 +951,11 @@
   (assert (equal "一瞬息三刹那四六徳" (jp-str/n 0.0000000000000001034)))
   (assert (equal "一弾指三六徳四虚空" (jp-str/n 0.00000000000000001034)))
   (assert (equal "一刹那三虚空四清浄" (jp-str/n 0.000000000000000001034)))
+  ;; minus
+  (assert (equal "マイナス一分" (jp-str/n -0.1)))
+  (assert (equal "マイナス二分" (jp-str/n -0.2)))
+  (assert (equal "マイナス一分一厘" (jp-str/n -0.11)))
+  (assert (equal "マイナス二厘" (jp-str/n -0.02)))
   ;;
   t)
 
@@ -959,14 +964,45 @@
   (assert (equal "一無量大数" (jp-str/n (expt 10 68))))
   (assert (equal "一〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇"
 		 (jp-str/n (expt 10 72))))
+  (assert (equal "マイナス一無量大数" (jp-str/n (- (expt 10 68)))))
+  (assert (equal "−一〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇"
+		 (jp-str/n (- (expt 10 72)))))
   ;; too small num
   (assert (equal "一清浄" (jp-str/n 0.000000000000000000001)))
   (assert (equal (format nil "~A" 0.0000000000000000000001)
   		 (jp-str/n 0.0000000000000000000001)))
+  (assert (equal "マイナス一清浄" (jp-str/n -0.000000000000000000001)))
+  (assert (equal (format nil "~A" -0.0000000000000000000001)
+  		 (jp-str/n -0.0000000000000000000001)))
   ;; complex
   (assert (equal (format nil "~A" #c(1 1))
   		 (jp-str/n #c(1 1))))
   ;;
+  t)
+
+(defun test-jp-normal-parameters ()
+  ;; [Integer]
+  ;; digits-after-dot -- ignored
+  (assert (equal "一" (jp-str/n 1 :digits-after-dot nil)))
+  (assert (equal "一" (jp-str/n 1 :digits-after-dot 0)))
+  (assert (equal "一" (jp-str/n 1 :digits-after-dot 1)))
+  (assert (equal "一" (jp-str/n 1 :digits-after-dot -1)))
+  ;; scale
+  (assert (equal "一" (jp-str/n 1 :scale nil)))
+  (assert (equal "一" (jp-str/n 1 :scale 0)))
+  (assert (equal "十" (jp-str/n 1 :scale 1)))
+  (assert (equal "十分の一" (jp-str/n 1 :scale -1)))
+  ;; radix-point-arg 
+  (assert (equal "一" (jp-str/n 1 :radix-point-arg nil)))
+  (assert (equal "一a" (jp-str/n 1 :radix-point-arg #\a)))
+
+  ;; [Rational]
+  ;; (TODO)
+
+  ;; [Float]
+  ;; (TODO)
+
+  ;; 
   t)
 
 (defun test-jp-normal ()
@@ -976,6 +1012,5 @@
        (test-jp-normal-rational)
        (test-jp-normal-float)
        (test-jp-normal-fallback)
-       ;; TODO:
-       ;; - check parameters
+       (test-jp-normal-parameters)
        t))

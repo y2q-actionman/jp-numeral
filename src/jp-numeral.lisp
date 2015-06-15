@@ -113,7 +113,7 @@
 	      (put-digit d1 1)
 	      (put-digit d0 0))))))))
 
-(defun print-jp-integer (stream object style)
+(defun print-jp-plus-integer (stream object style)
   (declare (type integer object))
   (loop with strs = nil
      for power from 0 by 4
@@ -129,6 +129,9 @@
 
 (defun print-jp-fraction (stream object style digits-after-dot scale
 			  radix-point-str radix-point-required-p)
+  (when (minusp object)
+    (write-string (get-minus-sign style) stream)
+    (setf object (- object)))
   (let* ((trim-zero? (not digits-after-dot))
 	 (digits-after-dot (or digits-after-dot
 			       (prog1 (- +power-min+)
@@ -146,7 +149,7 @@
 	 (int-part (parse-integer lispstr :end dot-pos))
 	 (frac-part-strlen (- (length lispstr) (1+ dot-pos))))
     ;; int part
-    (print-jp-integer stream int-part style)
+    (print-jp-plus-integer stream int-part style)
     ;; prints '0' if needed
     (when (and (zerop int-part)
 	       (or radix-point-required-p
@@ -189,32 +192,37 @@
    try-again
    (handler-case
        (with-output-to-string (stream buf)
-	 (cond
-	   ((eq style :positional)
-	    (print-positional stream object style digits-after-dot scale radix-point-str))
-	   ((integerp object)
-	    (when (minusp object)
-	      (write-string (get-minus-sign style) stream))
-	    (if (zerop object)
-		(write-string (get-digit 0 style) stream)
-		(print-jp-integer stream (* (abs object) (expt 10 scale)) style))
-	    (when radix-point-arg
-	      (write-string radix-point-str stream)))
-	   ((rationalp object)
-	    (assert (not (zerop object)))
-	    (when (minusp object)
-	      (write-string (get-minus-sign style) stream))
-	    (let ((object (* (abs object) (expt 10 scale))))
-	      (print-jp-integer stream (denominator object) style)
+	 (flet ((apply-scale (type)
+		  (unless (zerop scale)
+		    (setf object (* object (expt 10 scale))
+			  scale 0)
+		    (unless (typep object type)
+		      (go try-again)))))
+	   (cond
+	     ((eq style :positional)
+	      (print-positional stream object style digits-after-dot scale radix-point-str))
+	     ((integerp object)
+	      (apply-scale 'integer)
+	      (when (minusp object)
+		(write-string (get-minus-sign style) stream))
+	      (if (zerop object)
+		  (write-string (get-digit 0 style) stream)
+		  (print-jp-plus-integer stream (abs object) style))
+	      (when radix-point-arg
+		(write-string radix-point-str stream)))
+	     ((rationalp object)
+	      (assert (not (zerop object)))
+	      (apply-scale 'ratio)
+	      (when (minusp object)
+		(write-string (get-minus-sign style) stream))
+	      (print-jp-plus-integer stream (denominator object) style)
 	      (write-string (get-parts-of style) stream)
-	      (print-jp-integer stream (abs (numerator object)) style)))
-	   ((floatp object)
-	    (when (minusp object)
-	      (write-string (get-minus-sign style) stream))
-	    (print-jp-fraction stream (abs object) style digits-after-dot scale
-			       radix-point-str radix-point-arg))
-	   (t				; complex etc.
-	    (error 'not-formattable-error))))
+	      (print-jp-plus-integer stream (abs (numerator object)) style))
+	     ((floatp object)
+	      (print-jp-fraction stream object style digits-after-dot scale
+				 radix-point-str radix-point-arg))
+	     (t				; complex etc.
+	      (error 'not-formattable-error)))))
      (no-power-char-error ()
        ;; Decimal power chars are exhausted. Use positional.
        (assert (not (eq style :positional)))
