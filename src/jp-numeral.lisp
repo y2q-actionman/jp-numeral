@@ -220,18 +220,20 @@
 		      (error 'not-formattable-error))
 		    pos))
 	 (int-part (parse-integer lispstr :end dot-pos))
-	 (frac-part-strlen (- (length lispstr) (1+ dot-pos))))
+	 (frac-part-as-int (or (parse-integer lispstr :start (1+ dot-pos)
+					      :junk-allowed t)
+			       0)))
     ;; int part
     (print-jp-plus-integer stream int-part style)
     ;; prints '0' if needed
     (when (and (zerop int-part)
 	       (or radix-point-required-p
-		   (zerop frac-part-strlen)))
+		   (zerop frac-part-as-int)))
       (write-string (get-digit 0 style) stream))
     ;; prints '.' if needed
     (when (or radix-point-required-p
 	      (and (not (zerop int-part))
-		   (plusp frac-part-strlen)))
+		   (plusp frac-part-as-int)))
       (write-string radix-point-string stream))
     ;; frac part
     (loop for i from (1+ dot-pos) below (length lispstr)
@@ -251,15 +253,15 @@
 	(t :normal)))
 
 (defun pprint-jp-numeral (o-stream object &optional colon-p at-sign-p
-			  digits-after-dot scale radix-point-arg
+			  digits-after-dot scale radix-point
 			  &aux (style (flag-to-style colon-p at-sign-p)))
   (unless (numberp object)
     (error "~A is not an expected type for jp-numeral" (type-of object)))
   (prog ((*print-base* 10)    ; *print-base* must be 10 for jp-numeral
 	 (scale (or scale 0))
-	 (radix-point-str (etypecase radix-point-arg
-			    (string radix-point-arg)
-			    (character (string radix-point-arg))
+	 (radix-point-str (etypecase radix-point
+			    (string radix-point)
+			    (character (string radix-point))
 			    (null (get-radix-point style))))
 	 (buf (make-array '(1) :element-type 'character :fill-pointer 0 :adjustable t)))
    try-again
@@ -269,7 +271,7 @@
 			   :digits-after-dot digits-after-dot
 			   :scale scale
 			   :radix-point-string radix-point-str
-			   :radix-point-required-p radix-point-arg))
+			   :radix-point-required-p (if radix-point t nil)))
      (no-power-char-error ()
        ;; Decimal power chars are exhausted. Use positional.
        (assert (not (eq style :positional)))

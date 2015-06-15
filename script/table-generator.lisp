@@ -128,7 +128,7 @@
 
 
 (define-constant +minus-sign+
-    '("マイナス" "負の" "負之" "−")
+    '("マイナス" nil "負之" "−")
   :test 'equalp)
 
 (define-constant +fraction-parts-of+

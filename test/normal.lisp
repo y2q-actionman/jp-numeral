@@ -3,10 +3,10 @@
 (in-package :jp-numeral.test)
 
 (defun jp-str/n (num &key digits-after-dot
-		 scale radix-point-arg)
+		 scale radix-point)
   (with-output-to-string (stream)
     (jp-numeral:jp stream num nil nil
-		   digits-after-dot scale radix-point-arg)))
+		   digits-after-dot scale radix-point)))
 
 (defun test-jp-normal-integer-4digits ()
   ;; 0
@@ -992,16 +992,49 @@
   (assert (equal "一" (jp-str/n 1 :scale 0)))
   (assert (equal "十" (jp-str/n 1 :scale 1)))
   (assert (equal "十分の一" (jp-str/n 1 :scale -1)))
-  ;; radix-point-arg 
-  (assert (equal "一" (jp-str/n 1 :radix-point-arg nil)))
-  (assert (equal "一a" (jp-str/n 1 :radix-point-arg #\a)))
+  ;; radix-point
+  (assert (equal "一" (jp-str/n 1 :radix-point nil)))
+  (assert (equal "一a" (jp-str/n 1 :radix-point #\a)))
+  (assert (equal "一abc" (jp-str/n 1 :radix-point "abc")))
 
   ;; [Rational]
-  ;; (TODO)
+  ;; digits-after-dot -- ignored
+  (assert (equal "二分の一" (jp-str/n 1/2 :digits-after-dot nil)))
+  (assert (equal "二分の一" (jp-str/n 1/2 :digits-after-dot 0)))
+  (assert (equal "二分の一" (jp-str/n 1/2 :digits-after-dot 1)))
+  (assert (equal "二分の一" (jp-str/n 1/2 :digits-after-dot -1)))
+  ;; scale
+  (assert (equal "二分の一" (jp-str/n 1/2 :scale nil)))
+  (assert (equal "二分の一" (jp-str/n 1/2 :scale 0)))
+  (assert (equal "五" (jp-str/n 1/2 :scale 1)))
+  (assert (equal "二十分の一" (jp-str/n 1/2 :scale -1)))
+  ;; radix-point -- ignored
+  (assert (equal "二分の一" (jp-str/n 1/2 :radix-point nil)))
+  (assert (equal "二分の一" (jp-str/n 1/2 :radix-point #\a)))
+  (assert (equal "二分の一" (jp-str/n 1/2 :radix-point "abc")))
 
   ;; [Float]
-  ;; (TODO)
-
+  ;; digits-after-dot
+  (assert (equal "十二・三分四厘" (jp-str/n 12.34 :digits-after-dot nil)))
+  (assert (equal "十二" (jp-str/n 12.34 :digits-after-dot 0)))
+  (assert (equal "十二・三分" (jp-str/n 12.34 :digits-after-dot 1)))
+  (assert (equal "十二・三分四厘" (jp-str/n 12.34 :digits-after-dot 2)))
+  (assert (equal "十二・三分四厘" (jp-str/n 12.34 :digits-after-dot 3)))
+  (assert (equal "十" (jp-str/n 12.34 :digits-after-dot -1)))
+  (assert (equal "〇" (jp-str/n 12.34 :digits-after-dot -2)))
+  ;; scale
+  (assert (equal "十二・三分四厘" (jp-str/n 12.34 :scale nil)))
+  (assert (equal "十二・三分四厘" (jp-str/n 12.34 :scale 0)))
+  (assert (equal "百二十三・四分" (jp-str/n 12.34 :scale 1)))
+  (assert (equal "千二百三十四" (jp-str/n 12.34 :scale 2)))
+  (assert (equal "一・二分三厘四毛" (jp-str/n 12.34 :scale -1)))
+  (assert (equal "一分二厘三毛四糸" (jp-str/n 12.34 :scale -2)))
+  ;; radix-point
+  (assert (equal "十二・三分四厘" (jp-str/n 12.34 :radix-point nil)))
+  (assert (equal "十二a三分四厘" (jp-str/n 12.34 :radix-point #\a)))
+  (assert (equal "十二abc三分四厘" (jp-str/n 12.34 :radix-point "abc")))
+  (assert (equal "千二百三十四abc" (jp-str/n 12.34 :radix-point "abc" :scale 2)))
+  (assert (equal "〇abc一分二厘三毛四糸" (jp-str/n 12.34 :radix-point "abc" :scale -2)))
   ;; 
   t)
 
