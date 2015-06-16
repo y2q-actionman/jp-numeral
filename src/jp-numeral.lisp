@@ -234,11 +234,7 @@
   (when (minusp object)
     (write-string (get-minus-sign style) stream)
     (setf object (- object)))
-  (let* ((digits-after-dot (or digits-after-dot
-			       (prog1 (- +power-min+)
-				 (when (< (log object 10) +power-min+)
-				   (error 'not-formattable-error)))))
-	 (lispstr (stringify-float object digits-after-dot scale))
+  (let* ((lispstr (stringify-float object digits-after-dot scale))
 	 (dot-pos (let ((pos (position #\. lispstr)))
 		    (unless pos
 		      (error 'not-formattable-error))
