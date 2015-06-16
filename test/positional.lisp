@@ -8,6 +8,11 @@
     (jp-numeral:jp stream num t t
 		   digits-after-dot scale radix-point)))
 
+(defun equal-or-free-format (expect number)
+  (let ((actual-string (jp-str/p number)))
+    (or (equal expect actual-string)
+	(format nil "~F" number))))
+
 (defun test-jp-positional-integer-4digits ()
   ;; 0
   (assert (equal "〇" (jp-str/p 0)))
@@ -934,27 +939,33 @@
   (assert (equal "〇・一〇三四" (jp-str/p 0.1034)))
   (assert (equal "〇・〇一〇三四" (jp-str/p 0.01034)))
   (assert (equal "〇・〇〇一〇三四" (jp-str/p 0.001034)))
-  ;; TODO
-  ;; (assert (equal "〇・〇〇〇一〇三四" (jp-str/p 0.0001034)))
-  ;; (assert (equal "〇・〇〇〇〇一〇三四" (jp-str/p 0.00001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇一〇三四" (jp-str/p 0.000001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇〇一〇三四" (jp-str/p 0.0000001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇〇〇一〇三四" (jp-str/p 0.00000001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇〇〇〇一〇三四" (jp-str/p 0.000000001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇〇〇〇〇一〇三四" (jp-str/p 0.0000000001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇〇〇〇〇〇一〇三四" (jp-str/p 0.00000000001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇〇〇〇〇〇〇一〇三四" (jp-str/p 0.000000000001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇〇〇〇〇〇〇〇一〇三四" (jp-str/p 0.0000000000001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇〇〇〇〇〇〇〇〇一〇三四" (jp-str/p 0.00000000000001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇〇〇〇〇〇〇〇〇〇一〇三四" (jp-str/p 0.000000000000001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇一〇三四" (jp-str/p 0.0000000000000001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇一〇三四" (jp-str/p 0.00000000000000001034)))
-  ;; (assert (equal "〇・〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇一〇三四" (jp-str/p 0.000000000000000001034)))
+  (assert (equal-or-free-format "一〇・三四" 10.34))
+  (assert (equal-or-free-format "一・〇三四" 1.034))
+  (assert (equal-or-free-format "〇・一〇三四" 0.1034))
+  (assert (equal-or-free-format "〇・〇一〇三四" 0.01034))
+  (assert (equal-or-free-format "〇・〇〇一〇三四" 0.001034))
+  (assert (equal-or-free-format "〇・〇〇〇一〇三四" 0.0001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇一〇三四" 0.00001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇一〇三四" 0.000001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇一〇三四" 0.0000001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇一〇三四" 0.00000001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇〇一〇三四" 0.000000001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇〇〇一〇三四" 0.0000000001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇〇〇〇一〇三四" 0.00000000001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇〇〇〇〇一〇三四" 0.000000000001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇〇〇〇〇〇一〇三四" 0.0000000000001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇〇〇〇〇〇〇一〇三四" 0.00000000000001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇〇〇〇〇〇〇〇一〇三四" 0.000000000000001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇一〇三四" 0.0000000000000001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇一〇三四" 0.00000000000000001034))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇一〇三四" 0.000000000000000001034))
   ;; minus
-  (assert (equal "−〇・一" (jp-str/p -0.1))) ; TODO: add int part
+  (assert (equal "−〇・一" (jp-str/p -0.1)))
   (assert (equal "−〇・二" (jp-str/p -0.2)))
   (assert (equal "−〇・一一" (jp-str/p -0.11)))
   (assert (equal "−〇・〇二" (jp-str/p -0.02)))
+  (assert (equal "−一・一" (jp-str/p -1.1)))
+  (assert (equal "−一・〇一" (jp-str/p -1.01)))
   ;;
   t)
 
@@ -968,14 +979,15 @@
 		 (jp-str/p (- (expt 10 68)))))
   (assert (equal "−一〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇"
 		 (jp-str/p (- (expt 10 72)))))
-  ;; TODO
-  ;; ;; too small num
-  ;; (assert (equal "一清浄" (jp-str/p 0.000000000000000000001)))
-  ;; (assert (equal (format nil "~A" 0.0000000000000000000001)
-  ;; 		 (jp-str/p 0.0000000000000000000001)))
-  ;; (assert (equal "−一清浄" (jp-str/p -0.000000000000000000001)))
-  ;; (assert (equal (format nil "~A" -0.0000000000000000000001)
-  ;; 		 (jp-str/p -0.0000000000000000000001)))
+  ;; too small num
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇一"
+				0.000000000000000000001))
+  (assert (equal-or-free-format "〇・〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇一"
+				0.0000000000000000000001))
+  (assert (equal-or-free-format "−〇・〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇一"
+				-0.000000000000000000001))
+  (assert (equal-or-free-format "−〇・〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇一"
+				-0.0000000000000000000001))
   ;; complex
   (assert (equal (format nil "~A" #c(1 1))
   		 (jp-str/p #c(1 1))))
@@ -1015,29 +1027,29 @@
   (assert (equal "一／二" (jp-str/p 1/2 :radix-point #\a)))
   (assert (equal "一／二" (jp-str/p 1/2 :radix-point "abc")))
 
-  ;; TODO:
   ;; [Float]
-  ;; ;; digits-after-dot
-  ;; (assert (equal "一二・三四" (jp-str/p 12.34 :digits-after-dot nil)))
-  ;; (assert (equal "一二・" (jp-str/p 12.34 :digits-after-dot 0))) ; TODO
-  ;; (assert (equal "一二・三" (jp-str/p 12.34 :digits-after-dot 1)))
-  ;; (assert (equal "一二・三四" (jp-str/p 12.34 :digits-after-dot 2)))
-  ;; (assert (equal "一二・三四〇" (jp-str/p 12.34 :digits-after-dot 3)))
-  ;; (assert (equal "一〇・〇" (jp-str/p 12.34 :digits-after-dot -1))) ; TODO
-  ;; (assert (equal "〇・〇" (jp-str/p 12.34 :digits-after-dot -2)))   ; TODO
-  ;; ;; scale
-  ;; (assert (equal "一二・三四" (jp-str/p 12.34 :scale nil)))
-  ;; (assert (equal "一二・三四" (jp-str/p 12.34 :scale 0)))
-  ;; (assert (equal "一二三・四" (jp-str/p 12.34 :scale 1)))
-  ;; (assert (equal "一二三四" (jp-str/p 12.34 :scale 2)))
-  ;; (assert (equal "一・二三四" (jp-str/p 12.34 :scale -1)))
-  ;; (assert (equal "〇・一二三四" (jp-str/p 12.34 :scale -2)))
-  ;; ;; radix-point
-  ;; (assert (equal "一二・三四" (jp-str/p 12.34 :radix-point nil)))
-  ;; (assert (equal "一二a三四" (jp-str/p 12.34 :radix-point #\a)))
-  ;; (assert (equal "一二abc三四" (jp-str/p 12.34 :radix-point "abc")))
-  ;; (assert (equal "一二三四abc" (jp-str/p 12.34 :radix-point "abc" :scale 2)))
-  ;; (assert (equal "〇abc一二三四" (jp-str/p 12.34 :radix-point "abc" :scale -2)))
+  ;; digits-after-dot
+  (assert (equal "一二・三四" (jp-str/p 12.34 :digits-after-dot nil)))
+  (assert (equal "一二・" (jp-str/p 12.34 :digits-after-dot 0))) ; TODO
+  (assert (equal "一二・三" (jp-str/p 12.34 :digits-after-dot 1)))
+  (assert (equal "一二・三四" (jp-str/p 12.34 :digits-after-dot 2)))
+  (assert (equal "一二・三四〇" (jp-str/p 12.34 :digits-after-dot 3)))
+  (assert (equal "一〇・〇" (jp-str/p 12.34 :digits-after-dot -1))) ; TODO
+  (assert (equal "〇・〇" (jp-str/p 12.34 :digits-after-dot -2)))   ; TODO
+  ;; scale
+  (assert (equal "一二・三四" (jp-str/p 12.34 :scale nil)))
+  (assert (equal "一二・三四" (jp-str/p 12.34 :scale 0)))
+  (assert (equal "一二三・四" (jp-str/p 12.34 :scale 1)))
+  (assert (equal "一二三四・〇" (jp-str/p 12.34 :scale 2))) ; TODO
+  (assert (equal "一・二三四" (jp-str/p 12.34 :scale -1)))
+  (assert (equal "〇・一二三四" (jp-str/p 12.34 :scale -2)))
+  ;; radix-point
+  (assert (equal "一二・三四" (jp-str/p 12.34 :radix-point nil)))
+  (assert (equal "一二a三四" (jp-str/p 12.34 :radix-point #\a)))
+  (assert (equal "一二abc三四" (jp-str/p 12.34 :radix-point "abc")))
+  (assert (equal "一二三四abc〇" (jp-str/p 12.34 :radix-point "abc" :scale 2)))
+  (assert (equal "〇abc一二三四" (jp-str/p 12.34 :radix-point "abc" :scale -2)))
+
   ;; 
   t)
 

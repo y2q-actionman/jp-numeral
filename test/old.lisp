@@ -954,6 +954,8 @@
   (assert (equal "負之貳分" (jp-str/o -0.2)))
   (assert (equal "負之壹分壹釐" (jp-str/o -0.11)))
   (assert (equal "負之貳釐" (jp-str/o -0.02)))
+  (assert (equal "負之壹・壹分" (jp-str/o -1.1)))
+  (assert (equal "負之壹・壹釐" (jp-str/o -1.01)))
   ;;
   t)
 

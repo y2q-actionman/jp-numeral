@@ -50,6 +50,20 @@
   (aref +wari+ (style-to-index style)))
 
 
+;;; Utils
+
+(defun float-sufficient-width (flt)
+  (let ((from-pow (if (zerop flt)
+		      1
+		      (1+ (abs (log flt 10)))))
+	(from-mantissa (* (float-precision flt)
+			  (log (float-radix flt) 10)))
+	(reserved 2)) 			; dot, 0
+    (+ (ceiling from-pow)
+       (ceiling from-mantissa)
+       reserved)))
+
+
 ;;; Writers
 
 (defgeneric write-jp-numeral
@@ -78,8 +92,8 @@
 	       args))))
 
 
-(defun translate-number-char (c style &optional radix-point-string)
-  (case c
+(defun translate-digit-char (c style)
+  (ecase c
     (#\0 (get-digit 0 style))
     (#\1 (get-digit 1 style))
     (#\2 (get-digit 2 style))
@@ -89,18 +103,20 @@
     (#\6 (get-digit 6 style))
     (#\7 (get-digit 7 style))
     (#\8 (get-digit 8 style))
-    (#\9 (get-digit 9 style))
-    (#\. (or radix-point-string
-	     (error 'not-formattable-error)))
-    (#\- (get-minus-sign style))
-    (#\/ (get-parts-of style))
-    (otherwise
-     (error 'not-formattable-error))))
+    (#\9 (get-digit 9 style))))
 
 (defun write-positional-from-string (lispstr stream style
-				     &optional radix-point-string)
+				     radix-point-string)
   (loop for c across lispstr
-     as jp-str = (translate-number-char c style radix-point-string)
+     as jp-str =
+       (case c
+	 ((#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
+	  (translate-digit-char c style))
+	 (#\. radix-point-string)
+	 (#\- (get-minus-sign style))
+	 (#\/ (get-parts-of style))
+	 (#\Space "")
+	 (otherwise (error 'not-formattable-error)))
      do (write-string jp-str stream)))
 
 (defmethod write-jp-numeral ((object integer) (style (eql :positional)) stream
@@ -109,24 +125,37 @@
   (declare (ignore digits-after-dot)
 	   (ignorable scale))
   (assert (zerop scale))
-  (write-positional-from-string (format nil "~D" object) stream style)
-  (when radix-point-required-p
-    (write-string radix-point-string stream)))
+  (write-positional-from-string
+   (format nil "~D~@[.~]" object radix-point-required-p)
+   stream style radix-point-string))
 
 (defmethod write-jp-numeral ((object ratio) (style (eql :positional)) stream
 			     &key digits-after-dot scale radix-point-string
 			     radix-point-required-p)
-  (declare (ignore digits-after-dot radix-point-string radix-point-required-p)
+  (declare (ignore digits-after-dot)
 	   (ignorable scale))
   (assert (zerop scale))
-  (write-positional-from-string (format nil "~D/~D" (numerator object) (denominator object))
-				stream style))
+  (write-positional-from-string
+   (format nil "~D/~D~@[.~]" (numerator object) (denominator object) radix-point-required-p)
+   stream style radix-point-string))
+
+
+(defun stringify-float (flt digits-after-dot scale)
+  (let ((width (float-sufficient-width flt)))
+    (when (and (integerp digits-after-dot)
+	       (plusp digits-after-dot))
+      (incf width digits-after-dot))
+    ;; width is required for working 'scale'.
+    ;; (If both width and digits-after-dot are nil, it does not work..)
+    (format nil "~v,v,vF" width digits-after-dot scale flt)))
 
 (defmethod write-jp-numeral ((object float) (style (eql :positional)) stream
 			     &key digits-after-dot scale radix-point-string
 			     radix-point-required-p)
-  (write-positional-from-string (format nil "~,v,vF" digits-after-dot scale object)
-				stream style radix-point-string))
+  (declare (ignore radix-point-required-p)) ; radix point is always put.
+  (write-positional-from-string
+   (stringify-float object digits-after-dot scale)
+   stream style radix-point-string))
 
 
 (defun make-digits4-string (digits4 style)
@@ -170,7 +199,6 @@
      finally (mapc #'(lambda (s) (write-string s stream)) strs)))
 
 (defmethod write-jp-numeral ((object integer) style stream
-			     &rest args
 			     &key digits-after-dot scale radix-point-string
 			     radix-point-required-p)
   (declare (ignore digits-after-dot)
@@ -185,7 +213,6 @@
     (write-string radix-point-string stream)))
 
 (defmethod write-jp-numeral ((object ratio) style stream
-			     &rest args
 			     &key digits-after-dot scale radix-point-string
 			     radix-point-required-p)
   (declare (ignore digits-after-dot radix-point-string
@@ -205,16 +232,11 @@
   (when (minusp object)
     (write-string (get-minus-sign style) stream)
     (setf object (- object)))
-  (let* ((trim-zero? (not digits-after-dot))
-	 (digits-after-dot (or digits-after-dot
+  (let* ((digits-after-dot (or digits-after-dot
 			       (prog1 (- +power-min+)
 				 (when (< (log object 10) +power-min+)
 				   (error 'not-formattable-error)))))
-	 (lispstr (let ((str (with-standard-io-syntax
-			       (format nil "~,v,vF" digits-after-dot scale object))))
-		    (if trim-zero?
-			(string-right-trim '(#\0) str)
-			str)))
+	 (lispstr (stringify-float object digits-after-dot scale))
 	 (dot-pos (let ((pos (position #\. lispstr)))
 		    (unless pos
 		      (error 'not-formattable-error))
@@ -242,7 +264,7 @@
        unless (digit-char-p c)
        do (error 'not-formattable-error)
        if (char/= #\0 c)
-       do (write-string (translate-number-char c style) stream)
+       do (write-string (translate-digit-char c style) stream)
        (write-string (get-power power style) stream))))
 
 
