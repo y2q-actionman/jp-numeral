@@ -5,5 +5,6 @@
        (test-jp-formal)
        (test-jp-old)
        (test-jp-positional)
-       ;; TODO: yen, wari
+       (test-wari)
+       ;; TODO: yen
        t))

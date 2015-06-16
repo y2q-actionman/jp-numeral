@@ -223,7 +223,9 @@
     (write-string (get-minus-sign style) stream))
   (print-jp-plus-integer stream (denominator object) style)
   (write-string (get-parts-of style) stream)
-  (print-jp-plus-integer stream (abs (numerator object)) style))
+  (print-jp-plus-integer stream (abs (numerator object)) style)
+  (when radix-point-required-p
+    (write-string radix-point-string stream)))
 
 
 (defmethod write-jp-numeral ((object float) style stream

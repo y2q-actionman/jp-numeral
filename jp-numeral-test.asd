@@ -20,6 +20,7 @@
      (:file "formal")
      (:file "old")
      (:file "positional")
+     (:file "wari")
      (:file "all"))))
   :perform (asdf:test-op (o s)
   			 (uiop:symbol-call '#:jp-numeral.test '#:main))

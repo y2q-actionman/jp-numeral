@@ -1008,10 +1008,10 @@
   (assert (equal "貳分之壹" (jp-str/o 1/2 :scale 0)))
   (assert (equal "伍" (jp-str/o 1/2 :scale 1)))
   (assert (equal "貳拾分之壹" (jp-str/o 1/2 :scale -1)))
-  ;; radix-point -- ignored
+  ;; radix-point
   (assert (equal "貳分之壹" (jp-str/o 1/2 :radix-point nil)))
-  (assert (equal "貳分之壹" (jp-str/o 1/2 :radix-point #\a)))
-  (assert (equal "貳分之壹" (jp-str/o 1/2 :radix-point "abc")))
+  (assert (equal "貳分之壹a" (jp-str/o 1/2 :radix-point #\a)))
+  (assert (equal "貳分之壹abc" (jp-str/o 1/2 :radix-point "abc")))
 
   ;; [Float]
   ;; digits-after-dot
