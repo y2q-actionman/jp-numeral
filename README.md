@@ -127,3 +127,4 @@ JP-NUMERAL> (format nil "~@:/jp-numeral:jp/" 12345687890)
 - complex
 - ratio at "銭"
 - positional and radix-point
+- fix for '一千万'

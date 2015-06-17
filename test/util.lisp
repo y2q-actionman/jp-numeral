@@ -33,7 +33,7 @@
 
 (define-jp-stringify yen-str
     (style num &key digits-after-dot)
-  jp-numeral:wari)
+  jp-numeral:yen)
 
 (defun equal-or-free-format (style expect number)
   (let ((actual-string (jpn style number)))

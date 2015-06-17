@@ -6,5 +6,5 @@
        (test-jp-old)
        (test-jp-positional)
        (test-wari)
-       ;; TODO: yen
+       (test-yen)
        t))
