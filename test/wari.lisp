@@ -191,9 +191,68 @@
   ;; 
   t)
 
+(defun test-wari-positional ()
+  ;; integer
+  (assert (equal "〇割" (wari-str :positional 0)))
+  (assert (equal "一〇割" (wari-str :positional 1)))
+  (assert (equal "二〇割" (wari-str :positional 2)))
+  (assert (equal "一〇〇割" (wari-str :positional 10)))
+  (assert (equal "一一〇割" (wari-str :positional 11)))
+  (assert (equal "一二〇割" (wari-str :positional 12)))
+  (assert (equal "一九〇割" (wari-str :positional 19)))
+  (assert (equal "二〇〇割" (wari-str :positional 20)))
+  (assert (equal "二一〇割" (wari-str :positional 21)))
+  (assert (equal "二二〇割" (wari-str :positional 22)))
+  (assert (equal "一〇〇〇割" (wari-str :positional 100)))
+  (assert (equal "二〇一〇割" (wari-str :positional 201)))
+  (assert (equal "一〇〇〇〇割" (wari-str :positional 1000)))
+  (assert (equal "一一一一〇割" (wari-str :positional 1111)))
+  (assert (equal "二二二二〇割" (wari-str :positional 2222)))
+  (assert (equal "一〇〇〇〇〇割" (wari-str :positional 10000)))
+  (assert (equal "一二一〇〇〇〇〇割" (wari-str :positional 1210000)))
+  (assert (equal "一〇〇〇〇〇〇〇〇割" (wari-str :positional 10000000)))
+  (assert (equal "一〇二〇三〇四〇〇割" (wari-str :positional 10203040)))
 
-;; TODO: positional
+  (assert (equal "−一〇割" (wari-str :positional -1)))
+  (assert (equal "−二〇割" (wari-str :positional -2)))
 
+  ;; ratio
+  (assert (equal "五割" (wari-str :positional 1/2)))
+  (assert (equal "十／三割" (wari-str :positional 1/3)))
+  (assert (equal "五／二割" (wari-str :positional 1/4)))
+  (assert (equal "二割" (wari-str :positional 1/5)))
+  (assert (equal "五／三割" (wari-str :positional 1/6)))
+  (assert (equal "十／七割" (wari-str :positional 1/7)))
+  (assert (equal "五／四割" (wari-str :positional 1/8)))
+  (assert (equal "十／九割" (wari-str :positional 1/9)))
+  (assert (equal "一割" (wari-str :positional 1/10)))
+  (assert (equal "一／十割" (wari-str :positional 1/100)))
+  (assert (equal "一／百割" (wari-str :positional 1/1000)))
+  (assert (equal "一／千割" (wari-str :positional 1/10000)))
+  (assert (equal "一／一万割" (wari-str :positional 1/100000)))
+  (assert (equal "十一割" (wari-str :positional 11/10)))
+  (assert (equal "二十五割" (wari-str :positional 5/2)))
+  (assert (equal "五十／十一割" (wari-str :positional 5/11)))
+
+  (assert (equal "−五割" (wari-str :positional -1/2)))
+  (assert (equal "−十／三割" (wari-str :positional -1/3)))
+  (assert (equal "−二十五割" (wari-str :positional -5/2)))
+  (assert (equal "−五十／十一割" (wari-str :positional -5/11)))
+
+  ;; float
+  (assert (equal "一割" (wari-str :positional 0.1)))
+  (assert (equal "一割一" (wari-str :positional 0.11)))
+  (assert (equal "一割二三" (wari-str :positional 0.123)))
+  (assert (equal "三割〇五" (wari-str :positional 0.305)))
+  (assert (equal "十二割" (wari-str :positional 1.2)))
+  (assert (equal "十割三" (wari-str :positional 1.03)))
+  (assert (equal "〇割〇五" (wari-str :positional 0.005)))
+  
+  (assert (equal "−一割" (wari-str :positional -0.1)))
+  (assert (equal "−十割三" (wari-str :positional -1.03)))
+  (assert (equal "−〇割〇五" (wari-str :positional -0.005)))
+  ;; 
+  t)
 
 (defun test-wari-fallback ()
   ;; too big num
