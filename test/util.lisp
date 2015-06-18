@@ -2,10 +2,15 @@
 
 (define-modify-macro mulf (&rest args) *)
 
-(defun assert-equal (a b)
-  (assert (equal a b)
-	  (a b)
-	  "Test assertion failure: (equal ~A ~A), value" a b))
+(defmacro assert-equal (form-a form-b)
+  (let ((val-a (gensym))
+	(val-b (gensym)))
+    `(let ((,val-a ,form-a)
+	  (,val-b ,form-b))
+       (assert (equal ,val-a ,val-b)
+	       nil
+	       "Test assertion failure~_~S~_~A~_~A"
+	       '(equal ,form-a ,form-b) ,val-a ,val-b))))
 
 (defun assert-equal-or-free-format (style expect number)
   (let ((actual (jp-str style number))
@@ -15,6 +20,15 @@
 	    ()
 	    "Test assertion failure: (or (equal ~A ~A) (equal ~A ~1@*~A))"
 	    expect actual free-format)))
+
+(defmacro assert-some-condition (&body body)
+  (let ((returns (gensym)))
+    `(destructuring-bind (&rest ,returns)
+	 (multiple-value-list (ignore-errors ,@body))
+       (unless (and (null (first ,returns))
+		    (second ,returns))
+	 (assert nil nil
+		 "This form should cause some condition: ~A" ',body)))))
 
 
 (defun style-to-flag (style)

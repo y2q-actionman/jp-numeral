@@ -272,8 +272,7 @@
   (assert-equal "−〇割〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇一"
 		(wari-str :normal (- (float (expt 10 -23)))))
   ;; complex
-  (assert-equal (format nil "~A" #c(1 1))
-		(wari-str :normal #c(1 1)))
+  (assert-some-condition (wari-str :normal #c(1 1)))
   ;;
   t)
 

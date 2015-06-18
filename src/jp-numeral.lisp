@@ -323,6 +323,8 @@
   
 (defun wari (stream object &optional colon-p at-sign-p digits-after-dot
 	     &aux (style (flag-to-style colon-p at-sign-p)))
+  (unless (realp object)
+    (error "~A is not an expected type for wari" (type-of object)))
   (format-jp-numeral (flag-to-style colon-p at-sign-p)
 		     stream object
 		     :digits-after-dot digits-after-dot
@@ -334,43 +336,42 @@
 
 (defun yen (stream object &optional colon-p at-sign-p digits-after-dot
 	    &aux (style (flag-to-style colon-p at-sign-p)))
-  (flet ((print-ysr (signum yen sen rin)
-	   (when (zerop signum)
-	     (return-from print-ysr
-	       (format-jp-numeral style stream 0
-				  :digits-after-dot 0
-				  :scale 0
-				  :radix-point (get-yen style))))
-	   (when (minusp signum)
-	     (write-string (get-minus-sign style) stream))
-	   (unless (zerop yen)
-	     (format-jp-numeral style stream (abs yen)
-				:digits-after-dot 0
-				:scale 0
-				:radix-point (get-yen style)))
-	   (unless (zerop sen)
-	     (format-jp-numeral style stream (abs sen)
-				:digits-after-dot 0
-				:scale 0
-				:radix-point (get-sen style)))
-	   (unless (zerop rin)
-	     (format-jp-numeral style stream (abs rin)
-				:digits-after-dot 0
-				:scale 0
-				:radix-point (get-power -2 style))))) ; 'rin' char (厘) 
-    (case digits-after-dot
-      ((nil 2)
-       (setf digits-after-dot 2)
-       (let ((quot-2 (round object 1/100)))
-	 (multiple-value-bind (yen sen) (truncate quot-2 100)
-	   (print-ysr (signum quot-2) yen sen 0))))
-      (3
-       (let ((quot-3 (round object 1/1000)))
-	 (multiple-value-bind (yen rin-rest) (truncate quot-3 1000)
-	   (multiple-value-bind (sen rin) (truncate rin-rest 10)
-	     (print-ysr (signum quot-3) yen sen rin)))))
-      (otherwise
-       (error "digits should be 2, 3, or nil")))))
+  (unless (realp object)
+    (error "~A is not an expected type for yen" (type-of object)))
+  (unless digits-after-dot
+    (setf digits-after-dot 2))
+  (multiple-value-bind (signum yen sen rin)
+      (case digits-after-dot
+	(0
+	 (let ((quot-0 (round object 1)))
+	   (values (signum quot-0) quot-0 0 0)))
+	(2
+	 (let ((quot-2 (round object 1/100)))
+	   (multiple-value-bind (yen sen) (truncate quot-2 100)
+	     (values (signum quot-2) yen sen 0))))
+	(3
+	 (let ((quot-3 (round object 1/1000)))
+	   (multiple-value-bind (yen rin-rest) (truncate quot-3 1000)
+	     (multiple-value-bind (sen rin) (truncate rin-rest 10)
+	       (values (signum quot-3) yen sen rin)))))
+	(otherwise
+	 (error "digits should be 2, 3, or nil")))
+    (if (zerop signum)
+	(format-jp-numeral style stream 0
+			   :digits-after-dot 0
+			   :scale 0
+			   :radix-point (get-yen style))
+	(flet ((put-ysr (n radix-point)
+		 (unless (zerop n)
+		   (format-jp-numeral style stream
+				      (* signum (abs n))
+				      :digits-after-dot 0
+				      :scale 0
+				      :radix-point radix-point)
+		   (setf signum 1))))
+	  (put-ysr yen (get-yen style))
+	  (put-ysr sen (get-sen style))
+	  (put-ysr rin (get-power -2 style)))))) ; 'rin' char (厘) 
 
 (defun Y (&rest args)
   (apply #'yen args))

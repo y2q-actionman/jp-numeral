@@ -27,7 +27,7 @@
   (assert-equal "マイナス一円" (yen-str :normal -1))
   (assert-equal "マイナス二円" (yen-str :normal -2))
 
-  ;; ratio - rounded
+  ;; ratio 2
   (assert-equal "五十銭" (yen-str :normal 1/2))
   (assert-equal "三十三銭" (yen-str :normal 1/3))
   (assert-equal "二十五銭" (yen-str :normal 1/4))
@@ -44,42 +44,537 @@
   (assert-equal "一円十銭" (yen-str :normal 11/10))
   (assert-equal "二円五十銭" (yen-str :normal 5/2))
   (assert-equal "四十五銭" (yen-str :normal 5/11))
+  (assert-equal "一円" (yen-str :normal 1001/1000))
 
   (assert-equal "マイナス五十銭" (yen-str :normal -1/2))
   (assert-equal "マイナス三十三銭" (yen-str :normal -1/3))
   (assert-equal "マイナス二円五十銭" (yen-str :normal -5/2))
   (assert-equal "マイナス四十五銭" (yen-str :normal -5/11))
 
-  ;; float - TODO: digits 3
+  ;; ratio 3
+  (assert-equal "五十銭" (yen-str :normal 1/2 :digits-after-dot 3))
+  (assert-equal "三十三銭三厘" (yen-str :normal 1/3 :digits-after-dot 3))
+  (assert-equal "二十五銭" (yen-str :normal 1/4 :digits-after-dot 3))
+  (assert-equal "二十銭" (yen-str :normal 1/5 :digits-after-dot 3))
+  (assert-equal "十六銭七厘" (yen-str :normal 1/6 :digits-after-dot 3))
+  (assert-equal "十四銭三厘" (yen-str :normal 1/7 :digits-after-dot 3))
+  (assert-equal "十二銭五厘" (yen-str :normal 1/8 :digits-after-dot 3))
+  (assert-equal "十一銭一厘" (yen-str :normal 1/9 :digits-after-dot 3))
+  (assert-equal "十銭" (yen-str :normal 1/10 :digits-after-dot 3))
+  (assert-equal "一銭" (yen-str :normal 1/100 :digits-after-dot 3))
+  (assert-equal "一厘" (yen-str :normal 1/1000 :digits-after-dot 3))
+  (assert-equal "〇円" (yen-str :normal 1/10000 :digits-after-dot 3))
+  (assert-equal "〇円" (yen-str :normal 1/100000 :digits-after-dot 3))
+  (assert-equal "一円十銭" (yen-str :normal 11/10 :digits-after-dot 3))
+  (assert-equal "二円五十銭" (yen-str :normal 5/2 :digits-after-dot 3))
+  (assert-equal "四十五銭五厘" (yen-str :normal 5/11 :digits-after-dot 3))
+  (assert-equal "一円一厘" (yen-str :normal 1001/1000 :digits-after-dot 3))
+
+  (assert-equal "マイナス五十銭" (yen-str :normal -1/2 :digits-after-dot 3))
+  (assert-equal "マイナス三十三銭三厘" (yen-str :normal -1/3 :digits-after-dot 3))
+  (assert-equal "マイナス二円五十銭" (yen-str :normal -5/2 :digits-after-dot 3))
+  (assert-equal "マイナス四十五銭五厘" (yen-str :normal -5/11 :digits-after-dot 3))
+
+  ;; ratio 0
+  ;; (assert-equal "一円" (yen-str :normal 1/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "〇円" (yen-str :normal 1/3 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 1/4 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 1/5 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 1/6 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 1/7 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 1/8 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 1/9 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 1/10 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 1/100 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 1/1000 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 1/10000 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 1/100000 :digits-after-dot 0))
+  (assert-equal "一円" (yen-str :normal 11/10 :digits-after-dot 0))
+  ;; (assert-equal "三円" (yen-str :normal 5/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "〇円" (yen-str :normal 5/11 :digits-after-dot 0))
+  (assert-equal "一円" (yen-str :normal 1001/1000 :digits-after-dot 0))
+
+  ;; (assert-equal "マイナス一円" (yen-str :normal -1/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "〇円" (yen-str :normal -1/3 :digits-after-dot 0))
+  ;; (assert-equal "マイナス三円" (yen-str :normal -5/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "〇円" (yen-str :normal -5/11 :digits-after-dot 0))
+
+  ;; float 2
   (assert-equal "十銭" (yen-str :normal 0.1))
   (assert-equal "十一銭" (yen-str :normal 0.11))
   (assert-equal "十二銭" (yen-str :normal 0.123))
-  (assert-equal "三十一銭" (yen-str :normal 0.305))
+  (assert-equal "三十一銭" (yen-str :normal 0.306))
   (assert-equal "一円二十銭" (yen-str :normal 1.2))
   (assert-equal "一円三銭" (yen-str :normal 1.03))
-  ;; (assert-equal "〇円一銭" (yen-str :normal 0.005)) ; TODO
+  (assert-equal "一銭" (yen-str :normal 0.006))
+  (assert-equal "一円一銭" (yen-str :normal 1.006))
   
   (assert-equal "マイナス十銭" (yen-str :normal -0.1))
   (assert-equal "マイナス一円三銭" (yen-str :normal -1.03))
-  ;; (assert-equal "マイナス一銭" (yen-str :normal -0.005)) ; TODO
+  (assert-equal "マイナス一銭" (yen-str :normal -0.006))
+  (assert-equal "マイナス一円一銭" (yen-str :normal -1.006))
+
+  ;; float 3
+  (assert-equal "十銭" (yen-str :normal 0.1 :digits-after-dot 3))
+  (assert-equal "十一銭" (yen-str :normal 0.11 :digits-after-dot 3))
+  (assert-equal "十二銭三厘" (yen-str :normal 0.123 :digits-after-dot 3))
+  (assert-equal "三十銭六厘" (yen-str :normal 0.306 :digits-after-dot 3))
+  (assert-equal "一円二十銭" (yen-str :normal 1.2 :digits-after-dot 3))
+  (assert-equal "一円三銭" (yen-str :normal 1.03 :digits-after-dot 3))
+  (assert-equal "六厘" (yen-str :normal 0.006 :digits-after-dot 3))
+  (assert-equal "一円六厘" (yen-str :normal 1.006 :digits-after-dot 3))
+  
+  (assert-equal "マイナス十銭" (yen-str :normal -0.1 :digits-after-dot 3))
+  (assert-equal "マイナス一円三銭" (yen-str :normal -1.03 :digits-after-dot 3))
+  (assert-equal "マイナス六厘" (yen-str :normal -0.006 :digits-after-dot 3))
+  (assert-equal "マイナス一円六厘" (yen-str :normal -1.006 :digits-after-dot 3))
+
+  ;; float 0
+  (assert-equal "〇円" (yen-str :normal 0.1 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 0.11 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 0.123 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 0.306 :digits-after-dot 0))
+  (assert-equal "一円" (yen-str :normal 1.2 :digits-after-dot 0))
+  (assert-equal "一円" (yen-str :normal 1.03 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal 0.006 :digits-after-dot 0))
+  (assert-equal "一円" (yen-str :normal 1.006 :digits-after-dot 0))
+  
+  (assert-equal "〇円" (yen-str :normal -0.1 :digits-after-dot 0))
+  (assert-equal "マイナス一円" (yen-str :normal -1.03 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :normal -0.006 :digits-after-dot 0))
+  (assert-equal "マイナス一円" (yen-str :normal -1.006 :digits-after-dot 0))
   ;; 
   t)
 
 (defun test-yen-formal ()
-  ;; (stub)
-  ;; TODO
+  ;; integer
+  (assert-equal "〇円" (yen-str :formal 0))
+  (assert-equal "壱円" (yen-str :formal 1))
+  (assert-equal "弐円" (yen-str :formal 2))
+  (assert-equal "拾円" (yen-str :formal 10))
+  (assert-equal "拾壱円" (yen-str :formal 11))
+  (assert-equal "拾弐円" (yen-str :formal 12))
+  (assert-equal "拾九円" (yen-str :formal 19))
+  (assert-equal "弐拾円" (yen-str :formal 20))
+  (assert-equal "弐拾壱円" (yen-str :formal 21))
+  (assert-equal "弐拾弐円" (yen-str :formal 22))
+  (assert-equal "壱百円" (yen-str :formal 100))
+  (assert-equal "弐百壱円" (yen-str :formal 201))
+  (assert-equal "壱千円" (yen-str :formal 1000))
+  (assert-equal "壱千壱百拾壱円" (yen-str :formal 1111))
+  (assert-equal "弐千弐百弐拾弐円" (yen-str :formal 2222))
+  (assert-equal "壱万円" (yen-str :formal 10000))
+  (assert-equal "壱百弐拾壱万円" (yen-str :formal 1210000))
+  (assert-equal "壱千万円" (yen-str :formal 10000000))
+  (assert-equal "壱千弐拾万参千四拾円" (yen-str :formal 10203040))
+
+  (assert-equal "マイナス壱円" (yen-str :formal -1))
+  (assert-equal "マイナス弐円" (yen-str :formal -2))
+
+  ;; ratio 2
+  (assert-equal "五拾銭" (yen-str :formal 1/2))
+  (assert-equal "参拾参銭" (yen-str :formal 1/3))
+  (assert-equal "弐拾五銭" (yen-str :formal 1/4))
+  (assert-equal "弐拾銭" (yen-str :formal 1/5))
+  (assert-equal "拾七銭" (yen-str :formal 1/6))
+  (assert-equal "拾四銭" (yen-str :formal 1/7))
+  (assert-equal "拾弐銭" (yen-str :formal 1/8))
+  (assert-equal "拾壱銭" (yen-str :formal 1/9))
+  (assert-equal "拾銭" (yen-str :formal 1/10))
+  (assert-equal "壱銭" (yen-str :formal 1/100))
+  (assert-equal "〇円" (yen-str :formal 1/1000))
+  (assert-equal "〇円" (yen-str :formal 1/10000))
+  (assert-equal "〇円" (yen-str :formal 1/100000))
+  (assert-equal "壱円拾銭" (yen-str :formal 11/10))
+  (assert-equal "弐円五拾銭" (yen-str :formal 5/2))
+  (assert-equal "四拾五銭" (yen-str :formal 5/11))
+  (assert-equal "壱円" (yen-str :formal 1001/1000))
+
+  (assert-equal "マイナス五拾銭" (yen-str :formal -1/2))
+  (assert-equal "マイナス参拾参銭" (yen-str :formal -1/3))
+  (assert-equal "マイナス弐円五拾銭" (yen-str :formal -5/2))
+  (assert-equal "マイナス四拾五銭" (yen-str :formal -5/11))
+
+  ;; ratio 3
+  (assert-equal "五拾銭" (yen-str :formal 1/2 :digits-after-dot 3))
+  (assert-equal "参拾参銭参厘" (yen-str :formal 1/3 :digits-after-dot 3))
+  (assert-equal "弐拾五銭" (yen-str :formal 1/4 :digits-after-dot 3))
+  (assert-equal "弐拾銭" (yen-str :formal 1/5 :digits-after-dot 3))
+  (assert-equal "拾六銭七厘" (yen-str :formal 1/6 :digits-after-dot 3))
+  (assert-equal "拾四銭参厘" (yen-str :formal 1/7 :digits-after-dot 3))
+  (assert-equal "拾弐銭五厘" (yen-str :formal 1/8 :digits-after-dot 3))
+  (assert-equal "拾壱銭壱厘" (yen-str :formal 1/9 :digits-after-dot 3))
+  (assert-equal "拾銭" (yen-str :formal 1/10 :digits-after-dot 3))
+  (assert-equal "壱銭" (yen-str :formal 1/100 :digits-after-dot 3))
+  (assert-equal "壱厘" (yen-str :formal 1/1000 :digits-after-dot 3))
+  (assert-equal "〇円" (yen-str :formal 1/10000 :digits-after-dot 3))
+  (assert-equal "〇円" (yen-str :formal 1/100000 :digits-after-dot 3))
+  (assert-equal "壱円拾銭" (yen-str :formal 11/10 :digits-after-dot 3))
+  (assert-equal "弐円五拾銭" (yen-str :formal 5/2 :digits-after-dot 3))
+  (assert-equal "四拾五銭五厘" (yen-str :formal 5/11 :digits-after-dot 3))
+  (assert-equal "壱円壱厘" (yen-str :formal 1001/1000 :digits-after-dot 3))
+
+  (assert-equal "マイナス五拾銭" (yen-str :formal -1/2 :digits-after-dot 3))
+  (assert-equal "マイナス参拾参銭参厘" (yen-str :formal -1/3 :digits-after-dot 3))
+  (assert-equal "マイナス弐円五拾銭" (yen-str :formal -5/2 :digits-after-dot 3))
+  (assert-equal "マイナス四拾五銭五厘" (yen-str :formal -5/11 :digits-after-dot 3))
+
+  ;; ratio 0
+  ;; (assert-equal "壱円" (yen-str :formal 1/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "〇円" (yen-str :formal 1/3 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 1/4 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 1/5 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 1/6 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 1/7 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 1/8 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 1/9 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 1/10 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 1/100 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 1/1000 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 1/10000 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 1/100000 :digits-after-dot 0))
+  (assert-equal "壱円" (yen-str :formal 11/10 :digits-after-dot 0))
+  ;; (assert-equal "参円" (yen-str :formal 5/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "〇円" (yen-str :formal 5/11 :digits-after-dot 0))
+  (assert-equal "壱円" (yen-str :formal 1001/1000 :digits-after-dot 0))
+
+  ;; (assert-equal "マイナス壱円" (yen-str :formal -1/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "〇円" (yen-str :formal -1/3 :digits-after-dot 0))
+  ;; (assert-equal "マイナス参円" (yen-str :formal -5/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "〇円" (yen-str :formal -5/11 :digits-after-dot 0))
+
+  ;; float 2
+  (assert-equal "拾銭" (yen-str :formal 0.1))
+  (assert-equal "拾壱銭" (yen-str :formal 0.11))
+  (assert-equal "拾弐銭" (yen-str :formal 0.123))
+  (assert-equal "参拾壱銭" (yen-str :formal 0.306))
+  (assert-equal "壱円弐拾銭" (yen-str :formal 1.2))
+  (assert-equal "壱円参銭" (yen-str :formal 1.03))
+  (assert-equal "壱銭" (yen-str :formal 0.006))
+  (assert-equal "壱円壱銭" (yen-str :formal 1.006))
+  
+  (assert-equal "マイナス拾銭" (yen-str :formal -0.1))
+  (assert-equal "マイナス壱円参銭" (yen-str :formal -1.03))
+  (assert-equal "マイナス壱銭" (yen-str :formal -0.006))
+  (assert-equal "マイナス壱円壱銭" (yen-str :formal -1.006))
+
+  ;; float 3
+  (assert-equal "拾銭" (yen-str :formal 0.1 :digits-after-dot 3))
+  (assert-equal "拾壱銭" (yen-str :formal 0.11 :digits-after-dot 3))
+  (assert-equal "拾弐銭参厘" (yen-str :formal 0.123 :digits-after-dot 3))
+  (assert-equal "参拾銭六厘" (yen-str :formal 0.306 :digits-after-dot 3))
+  (assert-equal "壱円弐拾銭" (yen-str :formal 1.2 :digits-after-dot 3))
+  (assert-equal "壱円参銭" (yen-str :formal 1.03 :digits-after-dot 3))
+  (assert-equal "六厘" (yen-str :formal 0.006 :digits-after-dot 3))
+  (assert-equal "壱円六厘" (yen-str :formal 1.006 :digits-after-dot 3))
+  
+  (assert-equal "マイナス拾銭" (yen-str :formal -0.1 :digits-after-dot 3))
+  (assert-equal "マイナス壱円参銭" (yen-str :formal -1.03 :digits-after-dot 3))
+  (assert-equal "マイナス六厘" (yen-str :formal -0.006 :digits-after-dot 3))
+  (assert-equal "マイナス壱円六厘" (yen-str :formal -1.006 :digits-after-dot 3))
+
+  ;; float 0
+  (assert-equal "〇円" (yen-str :formal 0.1 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 0.11 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 0.123 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 0.306 :digits-after-dot 0))
+  (assert-equal "壱円" (yen-str :formal 1.2 :digits-after-dot 0))
+  (assert-equal "壱円" (yen-str :formal 1.03 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal 0.006 :digits-after-dot 0))
+  (assert-equal "壱円" (yen-str :formal 1.006 :digits-after-dot 0))
+  
+  (assert-equal "〇円" (yen-str :formal -0.1 :digits-after-dot 0))
+  (assert-equal "マイナス壱円" (yen-str :formal -1.03 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :formal -0.006 :digits-after-dot 0))
+  (assert-equal "マイナス壱円" (yen-str :formal -1.006 :digits-after-dot 0))
   ;; 
   t)
 
 (defun test-yen-old ()
-  ;; (stub)
-  ;; TODO
+  ;; integer
+  (assert-equal "零圓" (yen-str :old 0))
+  (assert-equal "壹圓" (yen-str :old 1))
+  (assert-equal "貳圓" (yen-str :old 2))
+  (assert-equal "拾圓" (yen-str :old 10))
+  (assert-equal "拾壹圓" (yen-str :old 11))
+  (assert-equal "拾貳圓" (yen-str :old 12))
+  (assert-equal "拾玖圓" (yen-str :old 19))
+  (assert-equal "貳拾圓" (yen-str :old 20))
+  (assert-equal "貳拾壹圓" (yen-str :old 21))
+  (assert-equal "貳拾貳圓" (yen-str :old 22))
+  (assert-equal "壹佰圓" (yen-str :old 100))
+  (assert-equal "貳佰壹圓" (yen-str :old 201))
+  (assert-equal "壹仟圓" (yen-str :old 1000))
+  (assert-equal "壹仟壹佰拾壹圓" (yen-str :old 1111))
+  (assert-equal "貳仟貳佰貳拾貳圓" (yen-str :old 2222))
+  (assert-equal "壹萬圓" (yen-str :old 10000))
+  (assert-equal "壹佰貳拾壹萬圓" (yen-str :old 1210000))
+  (assert-equal "壹仟萬圓" (yen-str :old 10000000))
+  (assert-equal "壹仟貳拾萬參仟肆拾圓" (yen-str :old 10203040))
+
+  (assert-equal "負之壹圓" (yen-str :old -1))
+  (assert-equal "負之貳圓" (yen-str :old -2))
+
+  ;; ratio 2
+  (assert-equal "伍拾錢" (yen-str :old 1/2))
+  (assert-equal "參拾參錢" (yen-str :old 1/3))
+  (assert-equal "貳拾伍錢" (yen-str :old 1/4))
+  (assert-equal "貳拾錢" (yen-str :old 1/5))
+  (assert-equal "拾柒錢" (yen-str :old 1/6))
+  (assert-equal "拾肆錢" (yen-str :old 1/7))
+  (assert-equal "拾貳錢" (yen-str :old 1/8))
+  (assert-equal "拾壹錢" (yen-str :old 1/9))
+  (assert-equal "拾錢" (yen-str :old 1/10))
+  (assert-equal "壹錢" (yen-str :old 1/100))
+  (assert-equal "零圓" (yen-str :old 1/1000))
+  (assert-equal "零圓" (yen-str :old 1/10000))
+  (assert-equal "零圓" (yen-str :old 1/100000))
+  (assert-equal "壹圓拾錢" (yen-str :old 11/10))
+  (assert-equal "貳圓伍拾錢" (yen-str :old 5/2))
+  (assert-equal "肆拾伍錢" (yen-str :old 5/11))
+  (assert-equal "壹圓" (yen-str :old 1001/1000))
+
+  (assert-equal "負之伍拾錢" (yen-str :old -1/2))
+  (assert-equal "負之參拾參錢" (yen-str :old -1/3))
+  (assert-equal "負之貳圓伍拾錢" (yen-str :old -5/2))
+  (assert-equal "負之肆拾伍錢" (yen-str :old -5/11))
+
+  ;; ratio 3
+  (assert-equal "伍拾錢" (yen-str :old 1/2 :digits-after-dot 3))
+  (assert-equal "參拾參錢參釐" (yen-str :old 1/3 :digits-after-dot 3))
+  (assert-equal "貳拾伍錢" (yen-str :old 1/4 :digits-after-dot 3))
+  (assert-equal "貳拾錢" (yen-str :old 1/5 :digits-after-dot 3))
+  (assert-equal "拾陸錢柒釐" (yen-str :old 1/6 :digits-after-dot 3))
+  (assert-equal "拾肆錢參釐" (yen-str :old 1/7 :digits-after-dot 3))
+  (assert-equal "拾貳錢伍釐" (yen-str :old 1/8 :digits-after-dot 3))
+  (assert-equal "拾壹錢壹釐" (yen-str :old 1/9 :digits-after-dot 3))
+  (assert-equal "拾錢" (yen-str :old 1/10 :digits-after-dot 3))
+  (assert-equal "壹錢" (yen-str :old 1/100 :digits-after-dot 3))
+  (assert-equal "壹釐" (yen-str :old 1/1000 :digits-after-dot 3))
+  (assert-equal "零圓" (yen-str :old 1/10000 :digits-after-dot 3))
+  (assert-equal "零圓" (yen-str :old 1/100000 :digits-after-dot 3))
+  (assert-equal "壹圓拾錢" (yen-str :old 11/10 :digits-after-dot 3))
+  (assert-equal "貳圓伍拾錢" (yen-str :old 5/2 :digits-after-dot 3))
+  (assert-equal "肆拾伍錢伍釐" (yen-str :old 5/11 :digits-after-dot 3))
+  (assert-equal "壹圓壹釐" (yen-str :old 1001/1000 :digits-after-dot 3))
+
+  (assert-equal "負之伍拾錢" (yen-str :old -1/2 :digits-after-dot 3))
+  (assert-equal "負之參拾參錢參釐" (yen-str :old -1/3 :digits-after-dot 3))
+  (assert-equal "負之貳圓伍拾錢" (yen-str :old -5/2 :digits-after-dot 3))
+  (assert-equal "負之肆拾伍錢伍釐" (yen-str :old -5/11 :digits-after-dot 3))
+
+  ;; ratio 0
+  ;; (assert-equal "壹圓" (yen-str :old 1/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "零圓" (yen-str :old 1/3 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 1/4 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 1/5 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 1/6 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 1/7 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 1/8 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 1/9 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 1/10 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 1/100 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 1/1000 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 1/10000 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 1/100000 :digits-after-dot 0))
+  (assert-equal "壹圓" (yen-str :old 11/10 :digits-after-dot 0))
+  ;; (assert-equal "參圓" (yen-str :old 5/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "零圓" (yen-str :old 5/11 :digits-after-dot 0))
+  (assert-equal "壹圓" (yen-str :old 1001/1000 :digits-after-dot 0))
+
+  ;; (assert-equal "負之壹圓" (yen-str :old -1/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "零圓" (yen-str :old -1/3 :digits-after-dot 0))
+  ;; (assert-equal "負之參圓" (yen-str :old -5/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "零圓" (yen-str :old -5/11 :digits-after-dot 0))
+
+  ;; float 2
+  (assert-equal "拾錢" (yen-str :old 0.1))
+  (assert-equal "拾壹錢" (yen-str :old 0.11))
+  (assert-equal "拾貳錢" (yen-str :old 0.123))
+  (assert-equal "參拾壹錢" (yen-str :old 0.306))
+  (assert-equal "壹圓貳拾錢" (yen-str :old 1.2))
+  (assert-equal "壹圓參錢" (yen-str :old 1.03))
+  (assert-equal "壹錢" (yen-str :old 0.006))
+  (assert-equal "壹圓壹錢" (yen-str :old 1.006))
+  
+  (assert-equal "負之拾錢" (yen-str :old -0.1))
+  (assert-equal "負之壹圓參錢" (yen-str :old -1.03))
+  (assert-equal "負之壹錢" (yen-str :old -0.006))
+  (assert-equal "負之壹圓壹錢" (yen-str :old -1.006))
+
+  ;; float 3
+  (assert-equal "拾錢" (yen-str :old 0.1 :digits-after-dot 3))
+  (assert-equal "拾壹錢" (yen-str :old 0.11 :digits-after-dot 3))
+  (assert-equal "拾貳錢參釐" (yen-str :old 0.123 :digits-after-dot 3))
+  (assert-equal "參拾錢陸釐" (yen-str :old 0.306 :digits-after-dot 3))
+  (assert-equal "壹圓貳拾錢" (yen-str :old 1.2 :digits-after-dot 3))
+  (assert-equal "壹圓參錢" (yen-str :old 1.03 :digits-after-dot 3))
+  (assert-equal "陸釐" (yen-str :old 0.006 :digits-after-dot 3))
+  (assert-equal "壹圓陸釐" (yen-str :old 1.006 :digits-after-dot 3))
+  
+  (assert-equal "負之拾錢" (yen-str :old -0.1 :digits-after-dot 3))
+  (assert-equal "負之壹圓參錢" (yen-str :old -1.03 :digits-after-dot 3))
+  (assert-equal "負之陸釐" (yen-str :old -0.006 :digits-after-dot 3))
+  (assert-equal "負之壹圓陸釐" (yen-str :old -1.006 :digits-after-dot 3))
+
+  ;; float 0
+  (assert-equal "零圓" (yen-str :old 0.1 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 0.11 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 0.123 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 0.306 :digits-after-dot 0))
+  (assert-equal "壹圓" (yen-str :old 1.2 :digits-after-dot 0))
+  (assert-equal "壹圓" (yen-str :old 1.03 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old 0.006 :digits-after-dot 0))
+  (assert-equal "壹圓" (yen-str :old 1.006 :digits-after-dot 0))
+  
+  (assert-equal "零圓" (yen-str :old -0.1 :digits-after-dot 0))
+  (assert-equal "負之壹圓" (yen-str :old -1.03 :digits-after-dot 0))
+  (assert-equal "零圓" (yen-str :old -0.006 :digits-after-dot 0))
+  (assert-equal "負之壹圓" (yen-str :old -1.006 :digits-after-dot 0))
   ;; 
   t)
 
 (defun test-yen-positional ()
-  ;; (stub)
-  ;; TODO
+  ;; integer
+  (assert-equal "〇円" (yen-str :positional 0))
+  (assert-equal "一円" (yen-str :positional 1))
+  (assert-equal "二円" (yen-str :positional 2))
+  (assert-equal "一〇円" (yen-str :positional 10))
+  (assert-equal "一一円" (yen-str :positional 11))
+  (assert-equal "一二円" (yen-str :positional 12))
+  (assert-equal "一九円" (yen-str :positional 19))
+  (assert-equal "二〇円" (yen-str :positional 20))
+  (assert-equal "二一円" (yen-str :positional 21))
+  (assert-equal "二二円" (yen-str :positional 22))
+  (assert-equal "一〇〇円" (yen-str :positional 100))
+  (assert-equal "二〇一円" (yen-str :positional 201))
+  (assert-equal "一〇〇〇円" (yen-str :positional 1000))
+  (assert-equal "一一一一円" (yen-str :positional 1111))
+  (assert-equal "二二二二円" (yen-str :positional 2222))
+  (assert-equal "一〇〇〇〇円" (yen-str :positional 10000))
+  (assert-equal "一二一〇〇〇〇円" (yen-str :positional 1210000))
+  (assert-equal "一〇〇〇〇〇〇〇円" (yen-str :positional 10000000))
+  (assert-equal "一〇二〇三〇四〇円" (yen-str :positional 10203040))
+
+  (assert-equal "−一円" (yen-str :positional -1))
+  (assert-equal "−二円" (yen-str :positional -2))
+
+  ;; ratio 2
+  (assert-equal "五〇銭" (yen-str :positional 1/2))
+  (assert-equal "三三銭" (yen-str :positional 1/3))
+  (assert-equal "二五銭" (yen-str :positional 1/4))
+  (assert-equal "二〇銭" (yen-str :positional 1/5))
+  (assert-equal "一七銭" (yen-str :positional 1/6))
+  (assert-equal "一四銭" (yen-str :positional 1/7))
+  (assert-equal "一二銭" (yen-str :positional 1/8))
+  (assert-equal "一一銭" (yen-str :positional 1/9))
+  (assert-equal "一〇銭" (yen-str :positional 1/10))
+  (assert-equal "一銭" (yen-str :positional 1/100))
+  (assert-equal "〇円" (yen-str :positional 1/1000))
+  (assert-equal "〇円" (yen-str :positional 1/10000))
+  (assert-equal "〇円" (yen-str :positional 1/100000))
+  (assert-equal "一円一〇銭" (yen-str :positional 11/10))
+  (assert-equal "二円五〇銭" (yen-str :positional 5/2))
+  (assert-equal "四五銭" (yen-str :positional 5/11))
+  (assert-equal "一円" (yen-str :positional 1001/1000))
+
+  (assert-equal "−五〇銭" (yen-str :positional -1/2))
+  (assert-equal "−三三銭" (yen-str :positional -1/3))
+  (assert-equal "−二円五〇銭" (yen-str :positional -5/2))
+  (assert-equal "−四五銭" (yen-str :positional -5/11))
+
+  ;; ratio 3
+  (assert-equal "五〇銭" (yen-str :positional 1/2 :digits-after-dot 3))
+  (assert-equal "三三銭三厘" (yen-str :positional 1/3 :digits-after-dot 3))
+  (assert-equal "二五銭" (yen-str :positional 1/4 :digits-after-dot 3))
+  (assert-equal "二〇銭" (yen-str :positional 1/5 :digits-after-dot 3))
+  (assert-equal "一六銭七厘" (yen-str :positional 1/6 :digits-after-dot 3))
+  (assert-equal "一四銭三厘" (yen-str :positional 1/7 :digits-after-dot 3))
+  (assert-equal "一二銭五厘" (yen-str :positional 1/8 :digits-after-dot 3))
+  (assert-equal "一一銭一厘" (yen-str :positional 1/9 :digits-after-dot 3))
+  (assert-equal "一〇銭" (yen-str :positional 1/10 :digits-after-dot 3))
+  (assert-equal "一銭" (yen-str :positional 1/100 :digits-after-dot 3))
+  (assert-equal "一厘" (yen-str :positional 1/1000 :digits-after-dot 3))
+  (assert-equal "〇円" (yen-str :positional 1/10000 :digits-after-dot 3))
+  (assert-equal "〇円" (yen-str :positional 1/100000 :digits-after-dot 3))
+  (assert-equal "一円一〇銭" (yen-str :positional 11/10 :digits-after-dot 3))
+  (assert-equal "二円五〇銭" (yen-str :positional 5/2 :digits-after-dot 3))
+  (assert-equal "四五銭五厘" (yen-str :positional 5/11 :digits-after-dot 3))
+  (assert-equal "一円一厘" (yen-str :positional 1001/1000 :digits-after-dot 3))
+
+  (assert-equal "−五〇銭" (yen-str :positional -1/2 :digits-after-dot 3))
+  (assert-equal "−三三銭三厘" (yen-str :positional -1/3 :digits-after-dot 3))
+  (assert-equal "−二円五〇銭" (yen-str :positional -5/2 :digits-after-dot 3))
+  (assert-equal "−四五銭五厘" (yen-str :positional -5/11 :digits-after-dot 3))
+
+  ;; ratio 0
+  ;; (assert-equal "一円" (yen-str :positional 1/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "〇円" (yen-str :positional 1/3 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 1/4 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 1/5 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 1/6 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 1/7 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 1/8 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 1/9 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 1/10 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 1/100 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 1/1000 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 1/10000 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 1/100000 :digits-after-dot 0))
+  (assert-equal "一円" (yen-str :positional 11/10 :digits-after-dot 0))
+  ;; (assert-equal "三円" (yen-str :positional 5/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "〇円" (yen-str :positional 5/11 :digits-after-dot 0))
+  (assert-equal "一円" (yen-str :positional 1001/1000 :digits-after-dot 0))
+
+  ;; (assert-equal "−一円" (yen-str :positional -1/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "〇円" (yen-str :positional -1/3 :digits-after-dot 0))
+  ;; (assert-equal "−三円" (yen-str :positional -5/2 :digits-after-dot 0)) ; 1/2 is ambiguous
+  (assert-equal "〇円" (yen-str :positional -5/11 :digits-after-dot 0))
+
+  ;; float 2
+  (assert-equal "一〇銭" (yen-str :positional 0.1))
+  (assert-equal "一一銭" (yen-str :positional 0.11))
+  (assert-equal "一二銭" (yen-str :positional 0.123))
+  (assert-equal "三一銭" (yen-str :positional 0.306))
+  (assert-equal "一円二〇銭" (yen-str :positional 1.2))
+  (assert-equal "一円三銭" (yen-str :positional 1.03))
+  (assert-equal "一銭" (yen-str :positional 0.006))
+  (assert-equal "一円一銭" (yen-str :positional 1.006))
+  
+  (assert-equal "−一〇銭" (yen-str :positional -0.1))
+  (assert-equal "−一円三銭" (yen-str :positional -1.03))
+  (assert-equal "−一銭" (yen-str :positional -0.006))
+  (assert-equal "−一円一銭" (yen-str :positional -1.006))
+
+  ;; float 3
+  (assert-equal "一〇銭" (yen-str :positional 0.1 :digits-after-dot 3))
+  (assert-equal "一一銭" (yen-str :positional 0.11 :digits-after-dot 3))
+  (assert-equal "一二銭三厘" (yen-str :positional 0.123 :digits-after-dot 3))
+  (assert-equal "三〇銭六厘" (yen-str :positional 0.306 :digits-after-dot 3))
+  (assert-equal "一円二〇銭" (yen-str :positional 1.2 :digits-after-dot 3))
+  (assert-equal "一円三銭" (yen-str :positional 1.03 :digits-after-dot 3))
+  (assert-equal "六厘" (yen-str :positional 0.006 :digits-after-dot 3))
+  (assert-equal "一円六厘" (yen-str :positional 1.006 :digits-after-dot 3))
+  
+  (assert-equal "−一〇銭" (yen-str :positional -0.1 :digits-after-dot 3))
+  (assert-equal "−一円三銭" (yen-str :positional -1.03 :digits-after-dot 3))
+  (assert-equal "−六厘" (yen-str :positional -0.006 :digits-after-dot 3))
+  (assert-equal "−一円六厘" (yen-str :positional -1.006 :digits-after-dot 3))
+
+  ;; float 0
+  (assert-equal "〇円" (yen-str :positional 0.1 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 0.11 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 0.123 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 0.306 :digits-after-dot 0))
+  (assert-equal "一円" (yen-str :positional 1.2 :digits-after-dot 0))
+  (assert-equal "一円" (yen-str :positional 1.03 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional 0.006 :digits-after-dot 0))
+  (assert-equal "一円" (yen-str :positional 1.006 :digits-after-dot 0))
+  
+  (assert-equal "〇円" (yen-str :positional -0.1 :digits-after-dot 0))
+  (assert-equal "−一円" (yen-str :positional -1.03 :digits-after-dot 0))
+  (assert-equal "〇円" (yen-str :positional -0.006 :digits-after-dot 0))
+  (assert-equal "−一円" (yen-str :positional -1.006 :digits-after-dot 0))
   ;; 
   t)
 
@@ -89,8 +584,8 @@
   (assert-equal "一〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇円"
 		(yen-str :normal (expt 10 72)))
   (assert-equal "マイナス一無量大数円" (yen-str :normal (- (expt 10 68))))
-  ;; (assert (equal "−一〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇円"
-  ;; 		 (yen-str :normal (- (expt 10 72))))) ; TODO
+  (assert-equal "−一〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇〇円"
+  		 (yen-str :normal (- (expt 10 72))))
   ;; ;; too small num
   (assert-equal "〇円" (yen-str :normal (float (expt 10 -21))))
   (assert-equal "〇円" (yen-str :normal (float (expt 10 -22))))
@@ -98,16 +593,13 @@
   (assert-equal "〇円" (yen-str :normal (- (float (expt 10 -21)))))
   (assert-equal "〇円" (yen-str :normal (- (float (expt 10 -22)))))
   (assert-equal "〇円" (yen-str :normal (- (float (expt 10 -23)))))
-  ;; ;; complex TODO
-  ;; (assert-equal (format nil "~A" #c(1 1))
-  ;; 		 (yen-str :normal #c(1 1))))
-  ;;
+  ;; complex
+  (assert-some-condition (yen-str :normal #c(1 1)))
+  ;; 
   t)
 
 (defun test-yen-parameters ()
-  ;; (stub)
-  ;; TODO
-  ;; 
+  ;; all has been done above..
   t)
 
 (defun test-yen ()
