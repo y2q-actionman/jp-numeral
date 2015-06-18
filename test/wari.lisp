@@ -240,15 +240,15 @@
   (assert-equal "−五〇／一一割" (wari-str :positional -5/11))
 
   ;; float
-  (assert-equal "一割〇" (wari-str :positional 0.1)) ; TODO
+  (assert-equal "一割" (wari-str :positional 0.1))
   (assert-equal "一割一" (wari-str :positional 0.11))
   (assert-equal "一割二三" (wari-str :positional 0.123))
   (assert-equal "三割〇五" (wari-str :positional 0.305))
-  (assert-equal "一二割〇" (wari-str :positional 1.2)) ; TODO
+  (assert-equal "一二割" (wari-str :positional 1.2))
   (assert-equal "一〇割三" (wari-str :positional 1.03))
   (assert-equal "〇割〇五" (wari-str :positional 0.005))
   
-  (assert-equal "−一割〇" (wari-str :positional -0.1)) ; TODO
+  (assert-equal "−一割" (wari-str :positional -0.1))
   (assert-equal "−一〇割三" (wari-str :positional -1.03))
   (assert-equal "−〇割〇五" (wari-str :positional -0.005))
   ;; 

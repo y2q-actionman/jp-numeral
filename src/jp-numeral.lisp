@@ -144,7 +144,11 @@
       (incf width digits-after-dot))
     ;; width is required for working 'scale'.
     ;; (If both width and digits-after-dot are nil, it does not work..)
-    (format nil "~v,v,vF" width digits-after-dot scale flt)))
+    (let ((ret (format nil "~v,v,vF" width digits-after-dot scale flt)))
+      (when (or (null digits-after-dot)
+		(minusp digits-after-dot))
+	(setf ret (string-right-trim '(#\0) ret)))
+      ret)))
 
 (defmethod write-jp-numeral ((object float) (style (eql :positional)) stream
 			     &key digits-after-dot scale radix-point-string

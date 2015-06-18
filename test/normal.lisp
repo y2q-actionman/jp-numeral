@@ -892,6 +892,10 @@
   t)
   
 (defun test-jp-normal-float ()
+  ;; int
+  (assert-equal "〇" (jp-str :normal 0.0))
+  (assert-equal "一" (jp-str :normal 1.0))
+  (assert-equal "十" (jp-str :normal 10.0))
   ;; 0.1-0.9
   (assert-equal "一分" (jp-str :normal 0.1))
   (assert-equal "二分" (jp-str :normal 0.2))

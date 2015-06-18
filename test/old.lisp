@@ -890,6 +890,10 @@
   t)
   
 (defun test-jp-old-float ()
+  ;; int
+  (assert-equal "零" (jp-str :old 0.0))
+  (assert-equal "壹" (jp-str :old 1.0))
+  (assert-equal "拾" (jp-str :old 10.0))
   ;; 0.1-0.9
   (assert-equal "壹分" (jp-str :old 0.1))
   (assert-equal "貳分" (jp-str :old 0.2))

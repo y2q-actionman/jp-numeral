@@ -892,6 +892,10 @@
   t)
   
 (defun test-jp-formal-float ()
+  ;; int
+  (assert-equal "〇" (jp-str :formal 0.0))
+  (assert-equal "壱" (jp-str :formal 1.0))
+  (assert-equal "拾" (jp-str :formal 10.0))
   ;; 0.1-0.9
   (assert-equal "壱分" (jp-str :formal 0.1))
   (assert-equal "弐分" (jp-str :formal 0.2))

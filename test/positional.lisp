@@ -890,6 +890,10 @@
   t)
   
 (defun test-jp-positional-float ()
+  ;; int
+  (assert-equal "〇・" (jp-str :positional 0.0))
+  (assert-equal "一・" (jp-str :positional 1.0))
+  (assert-equal "一〇・" (jp-str :positional 10.0))
   ;; 0.1-0.9
   (assert-equal "〇・一" (jp-str :positional 0.1))
   (assert-equal "〇・二" (jp-str :positional 0.2))
@@ -1023,24 +1027,24 @@
   ;; [Float]
   ;; digits-after-dot
   (assert-equal "一二・三四" (jp-str :positional 12.34 :digits-after-dot nil))
-  (assert-equal "一二・" (jp-str :positional 12.34 :digits-after-dot 0)) ; TODO
+  (assert-equal "一二・" (jp-str :positional 12.34 :digits-after-dot 0))
   (assert-equal "一二・三" (jp-str :positional 12.34 :digits-after-dot 1))
   (assert-equal "一二・三四" (jp-str :positional 12.34 :digits-after-dot 2))
   (assert-equal "一二・三四〇" (jp-str :positional 12.34 :digits-after-dot 3))
-  (assert-equal "一〇・〇" (jp-str :positional 12.34 :digits-after-dot -1)) ; TODO
-  (assert-equal "〇・〇" (jp-str :positional 12.34 :digits-after-dot -2))   ; TODO
+  (assert-equal "一〇・" (jp-str :positional 12.34 :digits-after-dot -1))
+  (assert-equal "〇・" (jp-str :positional 12.34 :digits-after-dot -2))
   ;; scale
   (assert-equal "一二・三四" (jp-str :positional 12.34 :scale nil))
   (assert-equal "一二・三四" (jp-str :positional 12.34 :scale 0))
   (assert-equal "一二三・四" (jp-str :positional 12.34 :scale 1))
-  (assert-equal "一二三四・〇" (jp-str :positional 12.34 :scale 2)) ; TODO
+  (assert-equal "一二三四・" (jp-str :positional 12.34 :scale 2))
   (assert-equal "一・二三四" (jp-str :positional 12.34 :scale -1))
   (assert-equal "〇・一二三四" (jp-str :positional 12.34 :scale -2))
   ;; radix-point
   (assert-equal "一二・三四" (jp-str :positional 12.34 :radix-point nil))
   (assert-equal "一二a三四" (jp-str :positional 12.34 :radix-point #\a))
   (assert-equal "一二abc三四" (jp-str :positional 12.34 :radix-point "abc"))
-  (assert-equal "一二三四abc〇" (jp-str :positional 12.34 :radix-point "abc" :scale 2))
+  (assert-equal "一二三四abc" (jp-str :positional 12.34 :radix-point "abc" :scale 2))
   (assert-equal "〇abc一二三四" (jp-str :positional 12.34 :radix-point "abc" :scale -2))
 
   ;; 

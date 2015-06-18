@@ -130,3 +130,8 @@ JP-NUMERAL> (format nil "~@:/jp-numeral:jp/" 12345687890)
 - ratio at "銭"
 - positional and radix-point
 - fix for '一千万'
+
+# 仕様
+- :positional 以外で、 float が float か分からなくなる。
+- :positional float で、 小数点以下が0のときは、その0は省略
+- 単位なしで小数が出ると ・ が出てくる。
