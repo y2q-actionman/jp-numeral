@@ -2,6 +2,21 @@
 
 (define-modify-macro mulf (&rest args) *)
 
+(defun assert-equal (a b)
+  (assert (equal a b)
+	  (a b)
+	  "Test assertion failure: (equal ~A ~A), value" a b))
+
+(defun assert-equal-or-free-format (style expect number)
+  (let ((actual (jp-str style number))
+	(free-format (format nil "~F" number)))
+    (assert (or (equal expect actual)
+		(equal free-format actual))
+	    ()
+	    "Test assertion failure: (or (equal ~A ~A) (equal ~A ~1@*~A))"
+	    expect actual free-format)))
+
+
 (defun style-to-flag (style)
   (ecase style
     (:positional (values t t))
@@ -34,8 +49,3 @@
 (define-jp-stringify yen-str
     (style num &key digits-after-dot)
   jp-numeral:yen)
-
-(defun equal-or-free-format (style expect number)
-  (let ((actual-string (jpn style number)))
-    (or (equal expect actual-string)
-	(format nil "~F" number))))
