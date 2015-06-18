@@ -50,20 +50,6 @@
   (aref +wari+ (style-to-index style)))
 
 
-;;; Utils
-
-(defun float-sufficient-width (flt)
-  (let ((from-pow (if (zerop flt)
-		      1
-		      (1+ (abs (log flt 10)))))
-	(from-mantissa (* (float-precision flt)
-			  (log (float-radix flt) 10)))
-	(reserved 2)) 			; dot, 0
-    (+ (ceiling from-pow)
-       (ceiling from-mantissa)
-       reserved)))
-
-
 ;;; Writers
 
 (defgeneric write-jp-numeral
@@ -140,6 +126,17 @@
    stream style radix-point-string))
 
 
+(defun float-sufficient-width (flt)
+  (let ((from-pow (if (zerop flt)
+		      1
+		      (1+ (abs (log flt 10)))))
+	(from-mantissa (* (float-precision flt)
+			  (log (float-radix flt) 10)))
+	(reserved 2)) 			; dot, 0
+    (+ (ceiling from-pow)
+       (ceiling from-mantissa)
+       reserved)))
+
 (defun stringify-float (flt digits-after-dot scale)
   (let ((width (float-sufficient-width flt)))
     (when (and (integerp digits-after-dot)
@@ -158,32 +155,33 @@
    stream style radix-point-string))
 
 
-(defun make-digits4-string (digits4 style)
+(defun make-digits4-string (digits4 style base-power)
   (declare (type (integer 0 9999) digits4))
-  (let ((fill-1 (ecase style
-		  (:normal nil)
-		  ((:formal :old) t))))
-    (with-output-to-string (stream)
-      (flet ((put-digit (digit pow)
-	       (ecase digit
-		 ((2 3 4 5 6 7 8 9)
-		  (write-string (get-digit digit style) stream)
-		  (write-string (get-power pow style) stream))
-		 (1 (ecase pow
-		      ((2 3)
-		       (when fill-1
-			 (write-string (get-digit digit style) stream)))
-		      (1 nil)
-		      (0 (write-string (get-digit digit style) stream)))
-		    (write-string (get-power pow style) stream))
-		 (0 nil))))
-	(multiple-value-bind (d3 d3-rest) (floor digits4 1000)
-	  (put-digit d3 3)
-	  (multiple-value-bind (d2 d2-rest) (floor d3-rest 100)
-	    (put-digit d2 2)
-	    (multiple-value-bind (d1 d0) (floor d2-rest 10)
-	      (put-digit d1 1)
-	      (put-digit d0 0))))))))
+  (with-output-to-string (stream)
+    (labels ((fill-1-p (style)
+	       (ecase style
+		 (:normal nil)
+		 ((:formal :old) t)))
+	     (put-digit (digit pow rest)
+	       (when (or (>= digit 2)
+			 (and (= digit 1)
+			      (ecase pow
+				(3 (or (fill-1-p style)
+				       (and (zerop rest)
+					    (plusp base-power))))
+				(2 (fill-1-p style))
+				(1 nil)
+				(0 t))))
+		 (write-string (get-digit digit style) stream))
+	       (when (>= digit 1)
+		 (write-string (get-power pow style) stream))))
+      (multiple-value-bind (d3 d3-rest) (floor digits4 1000)
+	(put-digit d3 3 d3-rest)
+	(multiple-value-bind (d2 d2-rest) (floor d3-rest 100)
+	  (put-digit d2 2 d2-rest)
+	  (multiple-value-bind (d1 d0) (floor d2-rest 10)
+	    (put-digit d1 1 d0)
+	    (put-digit d0 0 0)))))))
 
 (defun print-jp-plus-integer (stream object style)
   (declare (type integer object))
@@ -191,7 +189,7 @@
      for power from 0 by 4
      for (rest digits4) = (multiple-value-list (floor object 10000))
      then (multiple-value-list (floor rest 10000))
-     as digits4-str = (make-digits4-string digits4 style)
+     as digits4-str = (make-digits4-string digits4 style power)
      when (plusp (length digits4-str))
      do (push (get-power power style) strs)
        (push digits4-str strs)
@@ -215,8 +213,7 @@
 (defmethod write-jp-numeral ((object ratio) style stream
 			     &key digits-after-dot scale radix-point-string
 			     radix-point-required-p)
-  (declare (ignore digits-after-dot radix-point-string
-		   radix-point-required-p)
+  (declare (ignore digits-after-dot)
 	   (ignorable scale))
   (assert (zerop scale))
   (when (minusp object)
@@ -272,9 +269,8 @@
 	(at-sign-p :old)
 	(t :normal)))
 
-(defun pprint-jp-numeral (o-stream object &optional colon-p at-sign-p
-			  digits-after-dot scale radix-point
-			  &aux (style (flag-to-style colon-p at-sign-p)))
+(defun format-jp-numeral (style stream object
+			  &key digits-after-dot scale radix-point)
   (unless (numberp object)
     (error "~A is not an expected type for jp-numeral" (type-of object)))
   (prog ((*print-base* 10)    ; *print-base* must be 10 for jp-numeral
@@ -286,8 +282,8 @@
 	 (buf (make-array '(1) :element-type 'character :fill-pointer 0 :adjustable t)))
    try-again
    (handler-case
-       (with-output-to-string (stream buf)
-	 (write-jp-numeral object style stream
+       (with-output-to-string (buf-stream buf)
+	 (write-jp-numeral object style buf-stream
 			   :digits-after-dot digits-after-dot
 			   :scale scale
 			   :radix-point-string radix-point-str
@@ -304,22 +300,30 @@
        (setf (fill-pointer buf) 0)
        (format buf "~A" object)))
    ;; Final output.
-   (write-string buf o-stream))
+   (write-string buf stream))
   style) ; If this is not expected one by the caller, means alternative methods used.
 
 
 ;;; cl:format interface
 
-(defun JP (&rest args)
-  (apply #'pprint-jp-numeral args))
+(defun JP (stream object &optional colon-p at-sign-p
+	   digits-after-dot scale radix-point)
+  (format-jp-numeral (flag-to-style colon-p at-sign-p)
+		     stream object
+		     :digits-after-dot digits-after-dot
+		     :scale scale
+		     :radix-point radix-point))
   
 (defun J (&rest args)
-  (apply #'pprint-jp-numeral args))
+  (apply #'jp args))
   
 (defun wari (stream object &optional colon-p at-sign-p digits-after-dot
 	     &aux (style (flag-to-style colon-p at-sign-p)))
-  (pprint-jp-numeral stream object colon-p at-sign-p
-		     digits-after-dot 1 (get-wari style)))
+  (format-jp-numeral (flag-to-style colon-p at-sign-p)
+		     stream object
+		     :digits-after-dot digits-after-dot
+		     :scale 1
+		     :radix-point (get-wari style)))
 
 (defun W (&rest args)
   (apply #'wari args))
@@ -329,19 +333,27 @@
   (flet ((print-ysr (signum yen sen rin)
 	   (when (zerop signum)
 	     (return-from print-ysr
-	       (pprint-jp-numeral stream 0 colon-p at-sign-p
-				  0 0 (get-yen style))))
+	       (format-jp-numeral style stream 0
+				  :digits-after-dot 0
+				  :scale 0
+				  :radix-point (get-yen style))))
 	   (when (minusp signum)
 	     (write-string (get-minus-sign style) stream))
 	   (unless (zerop yen)
-	     (pprint-jp-numeral stream (abs yen) colon-p at-sign-p
-				0 0 (get-yen style)))
+	     (format-jp-numeral style stream (abs yen)
+				:digits-after-dot 0
+				:scale 0
+				:radix-point (get-yen style)))
 	   (unless (zerop sen)
-	     (pprint-jp-numeral stream (abs sen) colon-p at-sign-p
-				0 0 (get-sen style)))
+	     (format-jp-numeral style stream (abs sen)
+				:digits-after-dot 0
+				:scale 0
+				:radix-point (get-sen style)))
 	   (unless (zerop rin)
-	     (pprint-jp-numeral stream (abs rin) colon-p at-sign-p
-				0 0 (get-power -2 style))))) ; 'rin' char (厘) 
+	     (format-jp-numeral style stream (abs rin)
+				:digits-after-dot 0
+				:scale 0
+				:radix-point (get-power -2 style))))) ; 'rin' char (厘) 
     (case digits-after-dot
       ((nil 2)
        (setf digits-after-dot 2)

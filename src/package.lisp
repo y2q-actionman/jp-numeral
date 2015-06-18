@@ -5,7 +5,7 @@
   (:import-from :alexandria
 		#:define-constant)
   (:export
-   #:pprint-jp-numeral
+   #:format-jp-numeral
    #:jp
    #:j
    #:wari

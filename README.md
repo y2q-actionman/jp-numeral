@@ -77,7 +77,7 @@ JP-NUMERAL> (format nil "~@:/jp-numeral:jp/" 12345687890)
 
 # API
 
-## pprint-jp-numeral
+## format-jp-numeral
 
 (stub)
 
@@ -85,11 +85,13 @@ JP-NUMERAL> (format nil "~@:/jp-numeral:jp/" 12345687890)
 
 ## jp
 
-`pprint-jp-numeral` と同義。
+(stub)
+
+`format-jp-numeral` を cl:format の `~/` の関数呼びだしに合う形式で呼ぶ。
 
 ## j
 
-`pprint-jp-numeral` と同義。
+`jp` と同義。
 
 ## wari
 
