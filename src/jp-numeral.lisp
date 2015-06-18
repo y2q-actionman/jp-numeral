@@ -318,9 +318,6 @@
 		     :scale scale
 		     :radix-point radix-point))
   
-(defun J (&rest args)
-  (apply #'jp args))
-  
 (defun wari (stream object &optional colon-p at-sign-p digits-after-dot
 	     &aux (style (flag-to-style colon-p at-sign-p)))
   (unless (realp object)
@@ -330,9 +327,6 @@
 		     :digits-after-dot digits-after-dot
 		     :scale 1
 		     :radix-point (get-wari style)))
-
-(defun W (&rest args)
-  (apply #'wari args))
 
 (defun yen (stream object &optional colon-p at-sign-p digits-after-dot
 	    &aux (style (flag-to-style colon-p at-sign-p)))
@@ -372,6 +366,3 @@
 	  (put-ysr yen (get-yen style))
 	  (put-ysr sen (get-sen style))
 	  (put-ysr rin (get-power -2 style)))))) ; 'rin' char (厘) 
-
-(defun Y (&rest args)
-  (apply #'yen args))

@@ -7,8 +7,6 @@
   (:export
    #:format-jp-numeral
    #:jp
-   #:j
    #:wari
-   #:w
    #:yen
-   #:y))
+   ))
