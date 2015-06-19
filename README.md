@@ -189,9 +189,9 @@ It prints `object` into `stream` with the style specified on `style`.
 	
 - `scale`
 
-	出力の時に、 `10^scale` を掛けた値を出力する。
+	出力の時に、 `(expt 10 scale)` を掛けた値を出力する。
 	
-	When printing, uses a number mutiplied with `10^scale`.
+	When printing, uses a number mutiplied with `(expt 10 scale)`.
 	
 - `radix-point`
 
@@ -213,13 +213,11 @@ It prints `object` into `stream` with the style specified on `style`.
 
 `format-jp-numeral` と同様だが、 `cl:format` の `~/` での関数呼びだしに
 合うよう引数を変更している。
+フラグと `style` との対応は以下の通り:
+
 
 This function does same as `format-jp-numeral` but arranges arguments
 for calling from `cl:format` with `~/` directive.
-
-
-フラグと `style` との対応は以下の通り:
-
 The corresponding between flags and `style` is below:
 
 
@@ -263,13 +261,10 @@ This function work like `jp`, but puts as a yen.
 - `digits-after-dot`
 
 	小数点以下のどの桁まで表示するか指定する。デフォルトは 2。
-	
 	`0` (*円* まで), `2` (*銭* まで), `3` (*厘* まで) のいずれかが使用
 	できる。
 	
-
 	Specifies how many digits putted after a radix point. The default
 	is 2.
-	
 	Only one of `0` (until *円*, 1), `2` (until *銭*, 0.01), or `3`
 	(until *厘*, 0.001) is available.
