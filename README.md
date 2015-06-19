@@ -2,8 +2,8 @@
 
 Common Lisp で漢数字を出すというネタパッケージ。`format` との統合も可能。
 
-This is a package for printing numbers as Japanese numerals, and can
-be integrated with `format`.
+This is a fun package for printing numbers as Japanese numerals. This
+can be integrated with `format`.
 
 # License
 
@@ -137,7 +137,7 @@ JP-NUMERAL> (format nil "~@:/jp-numeral:jp/" 12345687890)
 
 # API
 
-## `format-jp-numeral`
+## Function `format-jp-numeral`
 
 ### 書式 / Syntax
 
@@ -207,7 +207,7 @@ It prints `object` into `stream` with the style specified on `style`.
 	Specifies a character or a string used as a radix point.
 	
 
-## `jp`
+## Function `jp`
 
 ### 書式 / Syntax
 
@@ -233,7 +233,7 @@ The corresponding between flags and `style` is below:
 - `(and (not colon-p) at-sign-p)` :: `:old`
 - `(and colon-p at-sign-p)` :: `:positional`
 
-## `wari`
+## Function `wari`
 
 ### 書式 / Syntax
 
@@ -248,7 +248,7 @@ The corresponding between flags and `style` is below:
 
 This function work like `jp`, but puts as a rate using *割*.
 
-## `yen`
+## Function `yen`
 
 ### 書式 / Syntax
 
