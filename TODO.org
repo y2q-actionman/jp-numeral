@@ -1,0 +1,24 @@
+# -*- mode: org -*-
+
+* TODO
+
+- [X] 0 の扱い
+- [X] 負の数
+- [X] 分数
+- [X] 浮動小数点数
+- [X] 桁の上限や下限を越えた時の処置
+- [X] NAN と 無限値 -- 規定なし
+- [X] "銭" と "割"
+- [X] bug at scale parameter
+- [X] Writing tests.
+- [X] fix 'XXXXXXXX.' at printing floats.
+- [X] complex
+- [X] ratio at "銭"
+- [X] positional and radix-point
+- [X] fix for '一千万'
+
+* 仕様
+
+- :positional 以外で、 float が float か分からなくなる。
+- :positional float で、 小数点以下が0のときは、その0は省略
+- 単位なしで小数が出ると ・ が出てくる。
