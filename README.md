@@ -24,6 +24,13 @@ The MIT License. See LICENSE file.
 (asdf:load-system :jp-numeral)
 ```
 
+For running tests, do below additionally.
+
+```lisp
+(load "jp-numeral-test.asd")
+(asdf:test-system :jp-numeral)
+```
+
 # Examples
 
 ## 通常の漢数字を出力する / Puts as (normal) Japanese numerals.

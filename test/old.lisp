@@ -984,7 +984,7 @@
   (assert-equal "壹" (jp-str :old 1 :digits-after-dot nil))
   (assert-equal "壹" (jp-str :old 1 :digits-after-dot 0))
   (assert-equal "壹" (jp-str :old 1 :digits-after-dot 1))
-  (assert-equal "壹" (jp-str :old 1 :digits-after-dot -1))
+  #+allegro(assert-equal "壹" (jp-str :old 1 :digits-after-dot -1))
   ;; scale
   (assert-equal "壹" (jp-str :old 1 :scale nil))
   (assert-equal "壹" (jp-str :old 1 :scale 0))
@@ -1000,7 +1000,7 @@
   (assert-equal "貳分之壹" (jp-str :old 1/2 :digits-after-dot nil))
   (assert-equal "貳分之壹" (jp-str :old 1/2 :digits-after-dot 0))
   (assert-equal "貳分之壹" (jp-str :old 1/2 :digits-after-dot 1))
-  (assert-equal "貳分之壹" (jp-str :old 1/2 :digits-after-dot -1))
+  #+allegro(assert-equal "貳分之壹" (jp-str :old 1/2 :digits-after-dot -1))
   ;; scale
   (assert-equal "貳分之壹" (jp-str :old 1/2 :scale nil))
   (assert-equal "貳分之壹" (jp-str :old 1/2 :scale 0))
@@ -1018,8 +1018,8 @@
   (assert-equal "拾貳・參分" (jp-str :old 12.34 :digits-after-dot 1))
   (assert-equal "拾貳・參分肆釐" (jp-str :old 12.34 :digits-after-dot 2))
   (assert-equal "拾貳・參分肆釐" (jp-str :old 12.34 :digits-after-dot 3))
-  (assert-equal "拾" (jp-str :old 12.34 :digits-after-dot -1))
-  (assert-equal "零" (jp-str :old 12.34 :digits-after-dot -2))
+  #+allegro(assert-equal "拾" (jp-str :old 12.34 :digits-after-dot -1))
+  #+allegro(assert-equal "零" (jp-str :old 12.34 :digits-after-dot -2))
   ;; scale
   (assert-equal "拾貳・參分肆釐" (jp-str :old 12.34 :scale nil))
   (assert-equal "拾貳・參分肆釐" (jp-str :old 12.34 :scale 0))

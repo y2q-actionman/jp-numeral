@@ -997,7 +997,7 @@
   (assert-equal "一" (jp-str :positional 1 :digits-after-dot nil))
   (assert-equal "一" (jp-str :positional 1 :digits-after-dot 0))
   (assert-equal "一" (jp-str :positional 1 :digits-after-dot 1))
-  (assert-equal "一" (jp-str :positional 1 :digits-after-dot -1))
+  #+allegro(assert-equal "一" (jp-str :positional 1 :digits-after-dot -1))
   ;; scale
   (assert-equal "一" (jp-str :positional 1 :scale nil))
   (assert-equal "一" (jp-str :positional 1 :scale 0))
@@ -1013,7 +1013,7 @@
   (assert-equal "一／二" (jp-str :positional 1/2 :digits-after-dot nil))
   (assert-equal "一／二" (jp-str :positional 1/2 :digits-after-dot 0))
   (assert-equal "一／二" (jp-str :positional 1/2 :digits-after-dot 1))
-  (assert-equal "一／二" (jp-str :positional 1/2 :digits-after-dot -1))
+  #+allegro(assert-equal "一／二" (jp-str :positional 1/2 :digits-after-dot -1))
   ;; scale
   (assert-equal "一／二" (jp-str :positional 1/2 :scale nil))
   (assert-equal "一／二" (jp-str :positional 1/2 :scale 0))
@@ -1031,8 +1031,8 @@
   (assert-equal "一二・三" (jp-str :positional 12.34 :digits-after-dot 1))
   (assert-equal "一二・三四" (jp-str :positional 12.34 :digits-after-dot 2))
   (assert-equal "一二・三四〇" (jp-str :positional 12.34 :digits-after-dot 3))
-  (assert-equal "一〇・" (jp-str :positional 12.34 :digits-after-dot -1))
-  (assert-equal "〇・" (jp-str :positional 12.34 :digits-after-dot -2))
+  #+allegro(assert-equal "一〇・" (jp-str :positional 12.34 :digits-after-dot -1))
+  #+allegro(assert-equal "〇・" (jp-str :positional 12.34 :digits-after-dot -2))
   ;; scale
   (assert-equal "一二・三四" (jp-str :positional 12.34 :scale nil))
   (assert-equal "一二・三四" (jp-str :positional 12.34 :scale 0))

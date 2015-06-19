@@ -283,14 +283,14 @@
  (assert-equal "一割" (wari-str :normal 1/10 :digits-after-dot nil))
  (assert-equal "一割" (wari-str :normal 1/10 :digits-after-dot 0))
  (assert-equal "一割" (wari-str :normal 1/10 :digits-after-dot 1))
- (assert-equal "一割" (wari-str :normal 1/10 :digits-after-dot -1))
+ #+allegro(assert-equal "一割" (wari-str :normal 1/10 :digits-after-dot -1))
 
  ;; [Rational]
  ;; digits-after-dot -- ignored
  (assert-equal "二分の一割" (wari-str :normal 1/20 :digits-after-dot nil))
  (assert-equal "二分の一割" (wari-str :normal 1/20 :digits-after-dot 0))
  (assert-equal "二分の一割" (wari-str :normal 1/20 :digits-after-dot 1))
- (assert-equal "二分の一割" (wari-str :normal 1/20 :digits-after-dot -1))
+ #+allegro(assert-equal "二分の一割" (wari-str :normal 1/20 :digits-after-dot -1))
 
  ;; [Float]
  ;; digits-after-dot
@@ -299,8 +299,8 @@
  (assert-equal "十二割三分" (wari-str :normal 1.234 :digits-after-dot 1))
  (assert-equal "十二割三分四厘" (wari-str :normal 1.234 :digits-after-dot 2))
  (assert-equal "十二割三分四厘" (wari-str :normal 1.234 :digits-after-dot 3))
- (assert-equal "十割" (wari-str :normal 1.234 :digits-after-dot -1))
- (assert-equal "〇割" (wari-str :normal 1.234 :digits-after-dot -2))
+ #+allegro(assert-equal "十割" (wari-str :normal 1.234 :digits-after-dot -1))
+ #+allegro(assert-equal "〇割" (wari-str :normal 1.234 :digits-after-dot -2))
  ;; 
  t)
 

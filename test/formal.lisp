@@ -986,7 +986,7 @@
   (assert-equal "壱" (jp-str :formal 1 :digits-after-dot nil))
   (assert-equal "壱" (jp-str :formal 1 :digits-after-dot 0))
   (assert-equal "壱" (jp-str :formal 1 :digits-after-dot 1))
-  (assert-equal "壱" (jp-str :formal 1 :digits-after-dot -1))
+  #+allegro(assert-equal "壱" (jp-str :formal 1 :digits-after-dot -1))
   ;; scale
   (assert-equal "壱" (jp-str :formal 1 :scale nil))
   (assert-equal "壱" (jp-str :formal 1 :scale 0))
@@ -1002,7 +1002,7 @@
   (assert-equal "弐分の壱" (jp-str :formal 1/2 :digits-after-dot nil))
   (assert-equal "弐分の壱" (jp-str :formal 1/2 :digits-after-dot 0))
   (assert-equal "弐分の壱" (jp-str :formal 1/2 :digits-after-dot 1))
-  (assert-equal "弐分の壱" (jp-str :formal 1/2 :digits-after-dot -1))
+  #+allegro(assert-equal "弐分の壱" (jp-str :formal 1/2 :digits-after-dot -1))
   ;; scale
   (assert-equal "弐分の壱" (jp-str :formal 1/2 :scale nil))
   (assert-equal "弐分の壱" (jp-str :formal 1/2 :scale 0))
@@ -1020,8 +1020,8 @@
   (assert-equal "拾弐・参分" (jp-str :formal 12.34 :digits-after-dot 1))
   (assert-equal "拾弐・参分四厘" (jp-str :formal 12.34 :digits-after-dot 2))
   (assert-equal "拾弐・参分四厘" (jp-str :formal 12.34 :digits-after-dot 3))
-  (assert-equal "拾" (jp-str :formal 12.34 :digits-after-dot -1))
-  (assert-equal "〇" (jp-str :formal 12.34 :digits-after-dot -2))
+  #+allegro(assert-equal "拾" (jp-str :formal 12.34 :digits-after-dot -1))
+  #+allegro(assert-equal "〇" (jp-str :formal 12.34 :digits-after-dot -2))
   ;; scale
   (assert-equal "拾弐・参分四厘" (jp-str :formal 12.34 :scale nil))
   (assert-equal "拾弐・参分四厘" (jp-str :formal 12.34 :scale 0))
