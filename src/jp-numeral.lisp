@@ -53,15 +53,15 @@
 ;;; Writers
 
 (defgeneric write-jp-numeral
-    (object style stream
+    (stream object style
 	    &key digits-after-dot scale radix-point-string
 	    radix-point-required-p)
-  (:method (object style stream &key &allow-other-keys)
-    (declare (ignore object style stream))
+  (:method (stream object style &key &allow-other-keys)
+    (declare (ignore stream object style))
     (error 'not-formattable-error)))
 
 
-(defmethod write-jp-numeral :around ((object rational) style stream
+(defmethod write-jp-numeral :around (stream (object rational) style
 				     &rest args
 				     &key scale &allow-other-keys)
   (let* ((scaled-object (* object (expt 10 scale)))
@@ -70,10 +70,10 @@
     ;; If they are not same type, dispatch the object again.
     (if (and (subtypep original-type scaled-type)
 	     (subtypep scaled-type original-type))
-	(apply #'call-next-method scaled-object style stream
+	(apply #'call-next-method stream scaled-object style
 	       :scale 0
 	       args)
-	(apply #'write-jp-numeral scaled-object style stream
+	(apply #'write-jp-numeral stream scaled-object style
 	       :scale 0
 	       args))))
 
@@ -91,7 +91,7 @@
     (#\8 (get-digit 8 style))
     (#\9 (get-digit 9 style))))
 
-(defun write-positional-from-string (lispstr stream style
+(defun write-positional-from-string (stream lispstr style
 				     radix-point-string)
   (loop for c across lispstr
      as jp-str =
@@ -105,25 +105,27 @@
 	 (otherwise (error 'not-formattable-error)))
      do (write-string jp-str stream)))
 
-(defmethod write-jp-numeral ((object integer) (style (eql :positional)) stream
+(defmethod write-jp-numeral (stream (object integer) (style (eql :positional))
 			     &key digits-after-dot scale radix-point-string
 			     radix-point-required-p)
   (declare (ignore digits-after-dot)
 	   (ignorable scale))
   (assert (zerop scale))
   (write-positional-from-string
+   stream
    (format nil "~D~@[.~]" object radix-point-required-p)
-   stream style radix-point-string))
+   style radix-point-string))
 
-(defmethod write-jp-numeral ((object ratio) (style (eql :positional)) stream
+(defmethod write-jp-numeral (stream (object ratio) (style (eql :positional))
 			     &key digits-after-dot scale radix-point-string
 			     radix-point-required-p)
   (declare (ignore digits-after-dot)
 	   (ignorable scale))
   (assert (zerop scale))
   (write-positional-from-string
+   stream
    (format nil "~D/~D~@[.~]" (numerator object) (denominator object) radix-point-required-p)
-   stream style radix-point-string))
+   style radix-point-string))
 
 
 (defun float-sufficient-width (flt)
@@ -150,13 +152,14 @@
 	(setf ret (string-right-trim '(#\0) ret)))
       ret)))
 
-(defmethod write-jp-numeral ((object float) (style (eql :positional)) stream
+(defmethod write-jp-numeral (stream (object float) (style (eql :positional))
 			     &key digits-after-dot scale radix-point-string
 			     radix-point-required-p)
   (declare (ignore radix-point-required-p)) ; radix point is always put.
   (write-positional-from-string
+   stream
    (stringify-float object digits-after-dot scale)
-   stream style radix-point-string))
+   style radix-point-string))
 
 
 (defun make-digits4-string (digits4 style base-power)
@@ -200,7 +203,7 @@
      while (plusp rest)
      finally (mapc #'(lambda (s) (write-string s stream)) strs)))
 
-(defmethod write-jp-numeral ((object integer) style stream
+(defmethod write-jp-numeral (stream (object integer) style
 			     &key digits-after-dot scale radix-point-string
 			     radix-point-required-p)
   (declare (ignore digits-after-dot)
@@ -214,7 +217,7 @@
   (when radix-point-required-p
     (write-string radix-point-string stream)))
 
-(defmethod write-jp-numeral ((object ratio) style stream
+(defmethod write-jp-numeral (stream (object ratio) style
 			     &key digits-after-dot scale radix-point-string
 			     radix-point-required-p)
   (declare (ignore digits-after-dot)
@@ -229,7 +232,7 @@
     (write-string radix-point-string stream)))
 
 
-(defmethod write-jp-numeral ((object float) style stream
+(defmethod write-jp-numeral (stream (object float) style
 			     &key digits-after-dot scale radix-point-string
 			     radix-point-required-p)
   (when (minusp object)
@@ -273,7 +276,7 @@
 	(at-sign-p :old)
 	(t :normal)))
 
-(defun format-jp-numeral (style stream object
+(defun format-jp-numeral (stream object style
 			  &key digits-after-dot scale radix-point)
   (unless (numberp object)
     (error "~A is not an expected type for jp-numeral" (type-of object)))
@@ -287,7 +290,7 @@
    try-again
    (handler-case
        (with-output-to-string (buf-stream buf)
-	 (write-jp-numeral object style buf-stream
+	 (write-jp-numeral buf-stream object style
 			   :digits-after-dot digits-after-dot
 			   :scale scale
 			   :radix-point-string radix-point-str
@@ -312,8 +315,8 @@
 
 (defun JP (stream object &optional colon-p at-sign-p
 	   digits-after-dot scale radix-point)
-  (format-jp-numeral (flag-to-style colon-p at-sign-p)
-		     stream object
+  (format-jp-numeral stream object
+		     (flag-to-style colon-p at-sign-p)
 		     :digits-after-dot digits-after-dot
 		     :scale scale
 		     :radix-point radix-point))
@@ -322,8 +325,8 @@
 	     &aux (style (flag-to-style colon-p at-sign-p)))
   (unless (realp object)
     (error "~A is not an expected type for wari" (type-of object)))
-  (format-jp-numeral (flag-to-style colon-p at-sign-p)
-		     stream object
+  (format-jp-numeral stream object
+		     (flag-to-style colon-p at-sign-p)
 		     :digits-after-dot digits-after-dot
 		     :scale 1
 		     :radix-point (get-wari style)))
@@ -351,14 +354,14 @@
 	(otherwise
 	 (error "digits should be 2, 3, or nil")))
     (if (zerop signum)
-	(format-jp-numeral style stream 0
+	(format-jp-numeral stream 0 style
 			   :digits-after-dot 0
 			   :scale 0
 			   :radix-point (get-yen style))
 	(flet ((put-ysr (n radix-point)
 		 (unless (zerop n)
-		   (format-jp-numeral style stream
-				      (* signum (abs n))
+		   (format-jp-numeral stream (* signum (abs n))
+				      style
 				      :digits-after-dot 0
 				      :scale 0
 				      :radix-point radix-point)
