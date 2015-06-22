@@ -64,19 +64,15 @@
 (defmethod write-jp-numeral :around (stream (object rational) style
 				     &rest args
 				     &key scale &allow-other-keys)
-  (let* ((scaled-object (* object (expt 10 scale)))
-	 (original-type (type-of object))
-	 (scaled-type (type-of scaled-object)))
+  (let* ((scaled-object (* object (expt 10 scale))))
     ;; If they are not same type, dispatch the object again.
-    (if (and (subtypep original-type scaled-type)
-	     (subtypep scaled-type original-type))
-	(apply #'call-next-method stream scaled-object style
-	       :scale 0
-	       args)
-	(apply #'write-jp-numeral stream scaled-object style
-	       :scale 0
-	       args))))
-
+    (apply (if (alexandria:type= (type-of object)
+				 (type-of scaled-object))
+	       #'call-next-method
+	       #'write-jp-numeral)
+	   stream scaled-object style
+	   :scale 0
+	   args)))
 
 (defun translate-digit-char (c style)
   (ecase c
@@ -313,7 +309,7 @@
 
 ;;; cl:format interface
 
-(defun JP (stream object &optional colon-p at-sign-p
+(defun jp (stream object &optional colon-p at-sign-p
 	   digits-after-dot scale radix-point)
   (format-jp-numeral stream object
 		     (flag-to-style colon-p at-sign-p)
@@ -325,8 +321,7 @@
 	     &aux (style (flag-to-style colon-p at-sign-p)))
   (unless (realp object)
     (error "~A is not an expected type for wari" (type-of object)))
-  (format-jp-numeral stream object
-		     (flag-to-style colon-p at-sign-p)
+  (format-jp-numeral stream object style
 		     :digits-after-dot digits-after-dot
 		     :scale 1
 		     :radix-point (get-wari style)))
