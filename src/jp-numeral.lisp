@@ -136,17 +136,17 @@
        reserved)))
 
 (defun stringify-float (flt digits-after-dot scale)
-  (let ((width (float-sufficient-width flt)))
-    (when (and (integerp digits-after-dot)
-	       (plusp digits-after-dot))
-      (incf width digits-after-dot))
-    ;; width is required for working 'scale'.
-    ;; (If both width and digits-after-dot are nil, it does not work..)
-    (let ((ret (format nil "~v,v,vF" width digits-after-dot scale flt)))
-      (when (or (null digits-after-dot)
-		(minusp digits-after-dot))
-	(setf ret (string-right-trim '(#\0) ret)))
-      ret)))
+  ;; width is required for working 'scale'.
+  ;; (If both width and digits-after-dot are nil, it does not work..)
+  (let* ((width (+ (float-sufficient-width flt)
+		   (if digits-after-dot
+		       (abs digits-after-dot) ; may be minus..
+		       0)))
+	 (ret (format nil "~v,v,vF" width digits-after-dot scale flt)))
+    (when (or (null digits-after-dot)
+	      (minusp digits-after-dot))
+      (setf ret (string-right-trim '(#\0) ret)))
+    ret))
 
 (defmethod write-jp-numeral (stream (object float) (style (eql :positional))
 			     &key digits-after-dot scale radix-point-string
@@ -235,10 +235,9 @@
     (write-string (get-minus-sign style) stream)
     (setf object (- object)))
   (let* ((lispstr (stringify-float object digits-after-dot scale))
-	 (dot-pos (let ((pos (position #\. lispstr)))
-		    (unless pos
-		      (error 'not-formattable-error))
-		    pos))
+	 (dot-pos (alexandria:if-let ((pos (position #\. lispstr)))
+		    pos
+		    (error 'not-formattable-error)))
 	 (int-part (parse-integer lispstr :end dot-pos))
 	 (frac-part-as-int (or (parse-integer lispstr :start (1+ dot-pos)
 					      :junk-allowed t)
