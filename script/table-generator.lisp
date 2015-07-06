@@ -22,28 +22,28 @@
 			:element-type '(unsigned-byte 8))
 	    :encoding :utf-8)))
   
-(defun to-octets-printer (str)
-  (if str
-      (make-instance 'octets-printer
-		     :octets (babel:string-to-octets str :encoding :utf-8))
-      nil))
-
 (defun to-table-entry-load-form (entry)
-  (destructuring-bind (normal &optional formal old positional) entry
-    (let* ((normal-octets (etypecase normal
-			    (string
-			     (to-octets-printer normal))
-			    (vector
-			     (make-instance 'octets-printer
-					    :octets normal))))
-	   (formal-octets (or (to-octets-printer formal)
-			      normal-octets))
-	   (old-octets (or (to-octets-printer old)
-			   formal-octets))
-	   (positional-octets (or (to-octets-printer positional)
-				  normal-octets)))
-      (vector normal-octets formal-octets
-	      old-octets positional-octets))))
+  (flet ((to-octets-printer (obj)
+	   (etypecase obj
+	     (string
+	      (make-instance 'octets-printer
+			     :octets (babel:string-to-octets obj :encoding :utf-8)))
+	     (vector
+	      (make-instance 'octets-printer
+			     :octets obj)))))
+    (destructuring-bind (normal &optional formal old positional) entry
+      (let* ((normal-octets (to-octets-printer normal))
+	     (formal-octets (if formal
+				(to-octets-printer formal)
+				normal-octets))
+	     (old-octets (if old
+			     (to-octets-printer old)
+			     formal-octets))
+	     (positional-octets (if positional
+				    (to-octets-printer positional)
+				    normal-octets)))
+	(vector normal-octets formal-octets
+		old-octets positional-octets)))))
 
 
 (define-constant +digits+
@@ -183,16 +183,12 @@
 		  (make-const-form '+table-positional-index+ 3))
 	  (terpri stream)
 	  (format stream "~S~%"
-		  `(define-constant ,(gen-output-symbol '+digits+)
-		       ',(make-digits-load-form)
-		     :test 'equalp
-		     :documentation "A vector of (<normal> <formal> <old> <positional>)"))
+		  (make-const-form '+digits+ `',(make-digits-load-form)
+				   "A vector of (<normal> <formal> <old> <positional>)"))
 	  (terpri stream)
 	  (format stream "~S~%"
-		  `(define-constant ,(gen-output-symbol '+power-alist+)
-		       ',(make-power-alist-load-form)
-		     :test 'equalp
-		     :documentation "An alist of (<power> . (<normal> <formal> <old> <positional>))"))
+		  (make-const-form '+power-alist+ `',(make-power-alist-load-form)
+				   "An alist of (<power> . (<normal> <formal> <old> <positional>))"))
 	  (terpri stream)
 	  (format stream "~S~%"
 		  (make-const-form '+power-max+ +power-max+))
