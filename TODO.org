@@ -16,6 +16,7 @@
 - [X] ratio at "銭"
 - [X] positional and radix-point
 - [X] fix for '一千万'
+- [ ] =+power-alist+= を hash-table にする。
 
 * 仕様
 
