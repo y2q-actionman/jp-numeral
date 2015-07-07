@@ -5,7 +5,8 @@
 (defpackage jp-numeral.table-generator
   (:use :cl)
   (:import-from :alexandria
-		:define-constant)
+		#:define-constant
+		#:alist-hash-table)
   (:export #:generate-file))
 
 (in-package :jp-numeral.table-generator)
@@ -120,13 +121,6 @@
      collect (cons i (to-table-entry-load-form entry))))
 
 
-(define-constant +power-max+
-    (apply #'max (mapcar #'car +power-alist+)))
-
-(define-constant +power-min+
-    (apply #'min (mapcar #'car +power-alist+)))
-
-
 (define-constant +minus-sign+
     '("マイナス" nil "負之" "−")
   :test 'equalp)
@@ -187,14 +181,9 @@
 				   "A vector of (<normal> <formal> <old> <positional>)"))
 	  (terpri stream)
 	  (format stream "~S~%"
-		  (make-const-form '+power-alist+ `',(make-power-alist-load-form)
+		  (make-const-form '+power-hash-table+
+				   `(alist-hash-table ',(make-power-alist-load-form))
 				   "An alist of (<power> . (<normal> <formal> <old> <positional>))"))
-	  (terpri stream)
-	  (format stream "~S~%"
-		  (make-const-form '+power-max+ +power-max+))
-	  (terpri stream)
-	  (format stream "~S~%"
-		  (make-const-form '+power-min+ +power-min+))
 	  (terpri stream)
 	  (format stream "~S~%"
 		  (make-const-str-array-form '+minus-sign+))
