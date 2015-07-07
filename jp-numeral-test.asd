@@ -9,7 +9,7 @@
   :description "Tests for jp-numeral."
   :license "MIT"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
-  :depends-on (:jp-numeral)
+  :depends-on (:jp-numeral :alexandria)
   :components
   ((:module "test"
     :serial t    
