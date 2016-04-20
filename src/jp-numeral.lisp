@@ -87,6 +87,8 @@
     (#\8 (get-digit 8 style))
     (#\9 (get-digit 9 style))))
 
+;; positional notation
+
 (defun write-positional-from-string (stream lispstr style
 				     radix-point-string)
   (loop for c across lispstr
@@ -157,6 +159,7 @@
    (stringify-float object digits-after-dot scale)
    style radix-point-string))
 
+;; normal notation
 
 (defun make-digits4-string (digits4 style base-power)
   (declare (type (integer 0 9999) digits4))
@@ -265,16 +268,10 @@
        (write-string (get-power power style) stream))))
 
 
-(defun flag-to-style (colon-p at-sign-p)
-  (cond ((and colon-p at-sign-p) :positional)
-	(colon-p :formal)
-	(at-sign-p :old)
-	(t :normal)))
-
+;; entry point
 (defun format-jp-numeral (stream object style
 			  &key digits-after-dot scale radix-point)
-  (unless (numberp object)
-    (error "~A is not an expected type for jp-numeral" (type-of object)))
+  (check-type object number "jp-numeral acceptable type")
   (prog ((*print-base* 10)    ; *print-base* must be 10 for jp-numeral
 	 (scale (or scale 0))
 	 (radix-point-str (etypecase radix-point
@@ -308,6 +305,12 @@
 
 ;;; cl:format interface
 
+(defun flag-to-style (colon-p at-sign-p)
+  (cond ((and colon-p at-sign-p) :positional)
+	(colon-p :formal)
+	(at-sign-p :old)
+	(t :normal)))
+
 (defun jp (stream object &optional colon-p at-sign-p
 	   digits-after-dot scale radix-point)
   (format-jp-numeral stream object
@@ -318,8 +321,7 @@
   
 (defun wari (stream object &optional colon-p at-sign-p digits-after-dot
 	     &aux (style (flag-to-style colon-p at-sign-p)))
-  (unless (realp object)
-    (error "~A is not an expected type for wari" (type-of object)))
+  (check-type object real "jp-numeral:wari acceptable type")
   (format-jp-numeral stream object style
 		     :digits-after-dot digits-after-dot
 		     :scale 1
@@ -327,8 +329,7 @@
 
 (defun yen (stream object &optional colon-p at-sign-p digits-after-dot
 	    &aux (style (flag-to-style colon-p at-sign-p)))
-  (unless (realp object)
-    (error "~A is not an expected type for yen" (type-of object)))
+  (check-type object real "jp-numeral:yen acceptable type")
   (unless digits-after-dot
     (setf digits-after-dot 2))
   (multiple-value-bind (signum yen sen rin)
