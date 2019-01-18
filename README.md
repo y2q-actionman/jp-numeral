@@ -13,7 +13,7 @@ The MIT License. See LICENSE file.
 
 ## Loading by quicklisp
 
-[![Quicklisp](http://quickdocs.org/badge/jp-numeral.svg)](http://quickdocs.org/jp-numerap/)
+[![Quicklisp](http://quickdocs.org/badge/jp-numeral.svg)](http://quickdocs.org/jp-numeral/)
 
 ```lisp
 (ql:quickload "jp-numeral")
