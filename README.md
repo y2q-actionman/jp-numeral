@@ -11,13 +11,23 @@ The MIT License. See LICENSE file.
 
 # Loading
 
-## Libraries depending on
+## Loading by quicklisp
+
+[![Quicklisp](http://quickdocs.org/badge/jp-numeral.svg)](http://quickdocs.org/jp-numerap/)
+
+```lisp
+(ql:quickload "jp-numeral")
+```
+
+## or, Loading manually
+
+### Libraries depending on
 
 * asdf
 * babel
 * alexandria
 
-## Loading
+### Loading
 
 ```lisp
 (load "jp-numeral.asd")
