@@ -3,7 +3,8 @@
 (defpackage jp-numeral
   (:use :cl)
   (:import-from :alexandria
-		#:define-constant)
+		#:define-constant
+		#:alist-hash-table)
   (:export
    #:format-jp-numeral
    #:jp

@@ -13,10 +13,7 @@
 (defmacro define-jp-stringify (name lambda-list function)
   (let ((style-sym (first lambda-list))
 	(num-sym (second lambda-list))
-	(keyargs (loop for i on lambda-list
-		    when (eq (car i) '&key)
-		    return (cdr i)
-		    finally (return nil))))
+	(keyargs (rest (member '&key lambda-list)))) ; too ad-hoc..
     `(defun ,name (,style-sym ,num-sym &key ,@keyargs)
        (multiple-value-bind (colon-p at-sign-p)
 	   (style-to-flag ,style-sym)
@@ -38,10 +35,9 @@
 
 
 (defmacro assert-equal (form-a form-b)
-  (let ((val-a (gensym))
-	(val-b (gensym)))
+  (alexandria:with-gensyms (val-a val-b)
     `(let ((,val-a ,form-a)
-	  (,val-b ,form-b))
+	   (,val-b ,form-b))
        (assert (equal ,val-a ,val-b)
 	       nil
 	       "Test assertion failure~_~S~_~A~_~A"

@@ -24,12 +24,9 @@
     (aref entry (style-to-index style))))
      
 (defun get-power (n style)
-  (unless (<= +power-min+ n +power-max+)
-    (error 'no-power-char-error))
-  (alexandria:if-let ((a-entry (assoc n +power-alist+)))
-    (aref (cdr a-entry)
-	  (style-to-index style))
-    (assert nil (n) "~D does not have an apropriate char" n)))
+  (alexandria:if-let ((entry (gethash n +power-hash-table+)))
+    (aref entry (style-to-index style))
+    (error 'no-power-char-error)))
 
 (defun get-minus-sign (style)
   (aref +minus-sign+ (style-to-index style)))
