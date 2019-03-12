@@ -462,7 +462,7 @@ Arguments are same as `jp', except below:
 
 以下の引数以外は、`jp' の引数と同様。
 
-- DIGITS-AFTER-DOTA
+- DIGITS-AFTER-DOT
 
   小数点以下のどの桁まで表示するか指定する。デフォルトは 2。
   `0` , `2` , `3` のいずれかが使用できる。"
