@@ -34,29 +34,8 @@
   jp-numeral:yen)
 
 
-(defmacro assert-equal (form-a form-b)
-  (alexandria:with-gensyms (val-a val-b)
-    `(let ((,val-a ,form-a)
-	   (,val-b ,form-b))
-       (assert (equal ,val-a ,val-b)
-	       nil
-	       "Test assertion failure~_~S~_~A~_~A"
-	       '(equal ,form-a ,form-b) ,val-a ,val-b))))
-
-(defun assert-equal-or-free-format (style expect number)
+(defun equal-or-free-format (style expect number)
   (let ((actual (jp-str style number))
 	(free-format (format nil "~F" number)))
-    (assert (or (equal expect actual)
-		(equal free-format actual))
-	    ()
-	    "Test assertion failure: (or (equal ~A ~A) (equal ~A ~1@*~A))"
-	    expect actual free-format)))
-
-(defmacro assert-some-condition (&body body)
-  (let ((returns (gensym)))
-    `(destructuring-bind (&rest ,returns)
-	 (multiple-value-list (ignore-errors ,@body))
-       (unless (and (null (first ,returns))
-		    (second ,returns))
-	 (assert nil nil
-		 "This form should cause some condition: ~A" ',body)))))
+    (or (equal expect actual)
+	(equal free-format actual))))
