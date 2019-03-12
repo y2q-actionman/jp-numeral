@@ -30,14 +30,14 @@ The MIT License. See LICENSE file.
 ### Loading
 
 ```lisp
-(load "jp-numeral.asd")
+(asdf:load-asd "jp-numeral.asd")
 (asdf:load-system :jp-numeral)
 ```
 
 For running tests, do below additionally.
 
 ```lisp
-(load "jp-numeral-test.asd")
+(asdf:load-asd "jp-numeral-test.asd")
 (asdf:test-system :jp-numeral)
 ```
 

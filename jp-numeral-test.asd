@@ -1,18 +1,11 @@
-;; Copyright (c) 2015 YOKOTA Yuki <y2q.actionman@gmail.com>
-;;
-;; This software is released under the MIT License.
-;; See the LICENSE file.
-
-(in-package :cl-user)
-
-(asdf:defsystem :jp-numeral.test
+(defsystem :jp-numeral-test
   :description "Tests for jp-numeral."
   :license "MIT"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
   :depends-on (:jp-numeral :alexandria)
   :components
   ((:module "test"
-    :serial t    
+    :serial t
     :components
     ((:file "package")
      (:file "util")
@@ -23,7 +16,5 @@
      (:file "wari")
      (:file "yen")
      (:file "all"))))
-  :perform (asdf:test-op (o s)
-  			 (uiop:symbol-call '#:jp-numeral.test '#:main))
-  )
-
+  :perform (test-op (o s)
+  		    (symbol-call '#:jp-numeral.test '#:main)))

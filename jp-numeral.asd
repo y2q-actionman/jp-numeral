@@ -1,11 +1,4 @@
-;; Copyright (c) 2015 YOKOTA Yuki <y2q.actionman@gmail.com>
-;;
-;; This software is released under the MIT License.
-;; See the LICENSE file.
-
-(in-package :cl-user)
-
-(asdf:defsystem :jp-numeral
+(defsystem :jp-numeral
   :description "A printer for Japanese numerals."
   :license "MIT"
   :author "YOKOTA Yuki <y2q.actionman@gmail.com>"
@@ -17,4 +10,4 @@
     ((:file "package")
      (:file "jp-numeral-table")
      (:file "jp-numeral"))))
-  :in-order-to ((asdf:test-op (asdf:test-op #:jp-numeral.test)))) 
+  :in-order-to ((test-op (test-op #:jp-numeral-test))))
