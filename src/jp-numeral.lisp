@@ -1,3 +1,5 @@
+;;; -*- coding: utf-8; -*-
+
 (in-package :jp-numeral)
 
 ;;; Conditions
@@ -22,7 +24,7 @@
   (assert (<= 0 n 9))
   (let ((entry (aref +digits+ n)))
     (aref entry (style-to-index style))))
-     
+
 (defun get-power (n style)
   (alexandria:if-let ((entry (gethash n +power-hash-table+)))
     (aref entry (style-to-index style))
@@ -30,7 +32,7 @@
 
 (defun get-minus-sign (style)
   (aref +minus-sign+ (style-to-index style)))
-  
+
 (defun get-parts-of (style)
   (aref +fraction-parts-of+ (style-to-index style)))
 
@@ -268,6 +270,38 @@
 ;; entry point
 (defun format-jp-numeral (stream object style
 			  &key digits-after-dot scale radix-point)
+  "This function works same as `jp', but arranges the arguments for
+convenience of calling from ordinary functions.
+This writes OBJECT into STREAM as Japanese numerals with the style
+specified by STYLE.
+
+Arguments are same as `jp', except below:
+
+- STYLE
+
+  Specify the style of output. Pass one of these symbols:
+
+  - `:normal'	:: Use normal Japanese numerals.
+  - `:formal'	:: Use formal styles.
+  - `:old'	:: Use old glyphs.
+  - `:positional' :: Use positional notations.
+
+====
+
+`jp' と同じことを行うが、普通の関数として呼び出すのに便利なように
+引数を置きかえている。
+STYLE で指定した形式で、 STREAM に OBJECT を書き出す。
+
+以下の引数以外は、`jp' の引数と同様。
+
+- STYLE
+
+  出力形式を指定する。以下のいずれかのシンボルを渡す。
+
+  - `:normal'	:: 一般的な漢数字を使用する。
+  - `:formal'	:: 大字を使用する。
+  - `:old'	:: 旧字体を使用する。
+  - `:positional' :: 位取り記数法を使用する。"
   (check-type object number "jp-numeral acceptable type")
   (prog ((*print-base* 10)    ; *print-base* must be 10 for jp-numeral
 	 (scale (or scale 0))
@@ -310,14 +344,98 @@
 
 (defun jp (stream object &optional colon-p at-sign-p
 	   digits-after-dot scale radix-point)
+  "This function writes OBJECT into STREAM as Japanese numerals.
+This can be called from `cl:format' with '~/' directive.
+
+Arguments are:
+
+- STREAM
+
+  Output destination stream.
+
+- OBJECT
+
+  The object to be outputted.
+
+- COLON-P, AT-SIGN-P
+
+  COLON-P and AT-SIGN-P specify the style for printing.
+  The corresponding is below:
+
+  - (and (not colon-p) (not at-sign-p))	:: Use normal Japanese numerals.
+  - (and colon-p (not at-sign-p))	:: Use formal styles.
+  - (and (not colon-p) at-sign-p)	:: Use Old glyphs.
+  - (and colon-p at-sign-p)	:: Use positional Notation.
+
+- DIGITS-AFTER-DOT
+
+  Specifies how many digits putted after the radix point when
+  printing a floating-point number.
+  When `nil' is specified, uses an appropriate one.
+
+- SCALE
+
+  When printing, uses a number mutiplied with (expt 10 scale).
+
+- RADIX-POINT
+
+  Specifies a character or a string used as a radix point.
+
+====
+
+STREAM に OBJECT を漢数字として書き出す。
+`cl:format' の `~/` での関数呼びだしでも使用できる。
+
+引数:
+
+- STREAM
+
+  出力先の stream
+	
+- OBJECT
+
+  出力する object
+	
+- COLON-P, AT-SIGN-P
+	
+  二つの組み合わせで出力形式を指定する。対応は以下の通り:
+
+  - (and (not colon-p) (not at-sign-p))	:: 通常の漢数字
+  - (and colon-p (not at-sign-p))	:: 大字
+  - (and (not colon-p) at-sign-p)	:: 旧字体
+  - (and colon-p at-sign-p) :: 位取り記数法
+
+- DIGITS-AFTER-DOT
+
+  浮動小数点数を出力する時に、小数点の後に何桁目まで出力するか。
+  `nil' にすると、適当に十分な数で出す。
+	
+- SCALE
+
+  出力の時に、 (expt 10 scale) を掛けた値を出力する。
+	
+- RADIX-POINT
+
+  小数点に使用する、文字もしくは文字列。"
   (format-jp-numeral stream object
 		     (flag-to-style colon-p at-sign-p)
 		     :digits-after-dot digits-after-dot
 		     :scale scale
 		     :radix-point radix-point))
-  
+
 (defun wari (stream object &optional colon-p at-sign-p digits-after-dot
 	     &aux (style (flag-to-style colon-p at-sign-p)))
+  "This function works like `jp', but puts as a rate.
+The output value is multiplied with 10, and '割' is used for the radix point.
+
+Arguments are same as `jp'.
+
+====
+
+`jp' と同様だが、 割合として表示する。
+10倍され、小数点に '割' を使用した値が表示される。
+
+引数は `jp' と同様。"
   (check-type object real "jp-numeral:wari acceptable type")
   (format-jp-numeral stream object style
 		     :digits-after-dot digits-after-dot
@@ -326,6 +444,28 @@
 
 (defun yen (stream object &optional colon-p at-sign-p digits-after-dot
 	    &aux (style (flag-to-style colon-p at-sign-p)))
+  "This function works like `jp', but puts as a yen.
+The output value is rounded on specified position, and printed until
+`1' with '円', until `0.01' with '銭', and until `0.001' with '厘'.
+
+Arguments are same as `jp', except below:
+
+- DIGITS-AFTER-DOT
+
+  Specifies how many digits putted after a radix point. The default is 2.
+  Only one of `0`, `2`, or `3` is available.
+
+====
+
+`jp' と同様だが、 円として表示する。
+指定した桁で丸め、 `1' の桁までは '円' で、 `0.01' の桁までは '銭' で、 `0.001' の桁は '厘' で表示する。
+
+以下の引数以外は、`jp' の引数と同様。
+
+- DIGITS-AFTER-DOTA
+
+  小数点以下のどの桁まで表示するか指定する。デフォルトは 2。
+  `0` , `2` , `3` のいずれかが使用できる。"
   (check-type object real "jp-numeral:yen acceptable type")
   (unless digits-after-dot
     (setf digits-after-dot 2))
@@ -360,4 +500,4 @@
 		   (setf signum 1))))
 	  (put-ysr yen (get-yen style))
 	  (put-ysr sen (get-sen style))
-	  (put-ysr rin (get-power -2 style)))))) ; 'rin' char (厘) 
+	  (put-ysr rin (get-power -2 style)))))) ; 'rin' char (厘)

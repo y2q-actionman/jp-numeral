@@ -148,4 +148,9 @@ CL-USER> (format nil "~@:/jp-numeral:jp/" 12345687890)
 
 # API
 
-see [API.md](API.md).
+Please see docstrings of these functions in `jp-numeral` package:
+
+- `format-jp-numeral`
+- `jp`
+- `wari`
+- `yen`
