@@ -7,7 +7,7 @@
   ((:module "test"
     :components
     ((:file "package")
-     (:file "util")
+     (:file "util" :depends-on ("package"))
      (:file "normal" :depends-on ("util"))
      (:file "formal" :depends-on ("util"))
      (:file "old" :depends-on ("util"))
